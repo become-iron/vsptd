@@ -35,6 +35,7 @@ class TestTriplet(unittest.TestCase):
 class TestTriplexString(unittest.TestCase):
     def setUp(self):
         self.trpStr = Trp('A', 'B', 'C') + Trp('D', 'E', 'F')
+        self.trpStr2 = Trp('J', 'K', 'L') + Trp('M', 'N', 'O')
         self.trp = Trp('G', 'H', 'I')
 
     # def test_init(self):
@@ -45,6 +46,10 @@ class TestTriplexString(unittest.TestCase):
         self.assertIsInstance(self.trp + self.trpStr, TrpStr)
         self.assertEqual(str(self.trpStr + self.trp), "$A.B='C';$D.E='F';$G.H='I';")
         self.assertEqual(str(self.trp + self.trpStr), "$G.H='I';$A.B='C';$D.E='F';")
+
+        # проверка метода add
+        self.assertEqual(self.trpStr + self.trp, self.trpStr.add(self.trp))
+        self.assertEqual(self.trpStr + self.trpStr2, self.trpStr.add(self.trpStr2))
 
     def test_str(self):
         self.assertEqual(str(self.trpStr),
