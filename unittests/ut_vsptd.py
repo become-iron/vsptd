@@ -48,8 +48,8 @@ class TestTriplexString(unittest.TestCase):
         self.assertEqual(str(self.trp + self.trpStr), "$G.H='I';$A.B='C';$D.E='F';")
 
         # проверка метода add
-        self.assertEqual(self.trpStr + self.trp, self.trpStr.add(self.trp))
-        self.assertEqual(self.trpStr + self.trpStr2, self.trpStr.add(self.trpStr2))
+        self.assertNotEqual(self.trpStr + self.trp, self.trpStr.add(self.trp))
+        self.assertNotEqual(self.trpStr + self.trpStr2, self.trpStr.add(self.trpStr2))
 
     def test_str(self):
         self.assertEqual(str(self.trpStr),

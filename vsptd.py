@@ -8,7 +8,7 @@ from math import sin, cos, tan, acos, atan, sinh, cosh, tanh, sqrt, exp
 from math import log as ln
 from math import log10 as log
 
-
+''
 # WODS - without dollar sign ('$')
 # NI - not isolated by '^' and '$'
 # TODO проверить целесообразность необособленных выражений
@@ -188,16 +188,15 @@ class TrpStr:
 
     def add(self, other):
         """СЛОЖЕНИЕ ТРИПЛЕКСНОЙ СТРОКИ С ТРИПЛЕКСНОЙ СТРОКОЙ ИЛИ ТРИПЛЕТОМ
-        Эквивалентно сложению через оператор "+"
+        Практически эквивалентно сложению через оператор "+". Отличие в том, что данный метод не возвращает новый
+        изменённый объект, а только изменяет нынешний.
         Принимает:
             other (TrpStr или Trp) - триплексная строка или триплет
-        Возвращает:
-            (TrpStr)
         Примеры:
             TtpStr + Trp
             TrpStr + TrpStr
         """
-        return self.__add__(other)
+        self.triplets = self.__add__(other).triplets
 
     def del_trp(self, prefix, name):
         # CHECK
@@ -243,6 +242,22 @@ class TrpStr:
                 self.triplets.remove(trp)
 
 
+def parse_trp_str(str_to_parse):
+    """
+    ПАРСИНГ ТРИПЛЕКСНОЙ СТРОКИ ИЗ str В TrpStr
+    Принимает:
+        str_to_parse (str) - строка для парсинга
+    Возвращает:
+        (TrpStr) - распарсенная строка
+    """
+    str_to_parse = re.findall(RE_TRIPLET, str_to_parse)
+    tmp_trp_str = []
+    for trp in str_to_parse:
+        value = _determine_value(trp[2])
+        tmp_trp_str += [Trp(trp[0], trp[1], value)]
+    return TrpStr(*tmp_trp_str)
+
+
 def _determine_value(value):
     """ОПРЕДЕЛЕНИЕ ТИПА ЗНАЧЕНИЯ ТРИПЛЕТА"""
     # TODO определение триплета, трипл. строки
@@ -263,16 +278,6 @@ def _determine_value(value):
             return float(value) if '.' in value else int(value)
         except ValueError:
             raise ValueError('Неверное значение триплета: ' + value)
-
-
-def parse_trp_str(trp_str):
-    """ПАРСИНГ ТРИПЛЕКСНОЙ СТРОКИ ИЗ str В TriplexString"""
-    trp_str = re.findall(RE_TRIPLET, trp_str)
-    tmp_trp_str = []
-    for trp in trp_str:
-        value = _determine_value(trp[2])
-        tmp_trp_str += [Trp(trp[0], trp[1], value)]
-    return TrpStr(*tmp_trp_str)
 
 
 # ======= РЕАЛИЗАЦИЯ ФУНКЦИИ ВЫЧИСЛЕНИЯ УСЛОВИЯ В ПРАВИЛЕ ВЫВОДА =======
@@ -324,9 +329,9 @@ def check_condition(trp_str, cond, trp_str_from_db=''):
 
     # замена операторов
     # WARN возможна неверная замена
-    # например, замена слов произойдёт, даже если в условии происходит
-    # сравнение со строкой, содержащей слово на замену
-    # $W.B = ' или '
+    # WARN например, замена слов произойдёт, даже если в условии происходит
+    # WARN сравнение со строкой, содержащей слово на замену
+    # WARN $W.B = ' или '
     replacements = [[' или ', ' or '],
                     [' и ', ' and '],
                     [' ИЛИ ', ' or '],
@@ -347,8 +352,7 @@ def check_condition(trp_str, cond, trp_str_from_db=''):
     trp_str_from_db = parse_trp_str(trp_str_from_db)
 
     # замены для функций ЕСТЬ и НЕТ
-    # TODO
-    # поиск триплетов в трипл. строке
+    # TODO оптимизировать
     for trp in re.findall(RE_FUNC_PRESENT, cond):  # функция ЕСТЬ
         item = trp[6:-1].upper().split('.')  # извлекаем префикс и имя в кортеж
         value = False
@@ -365,8 +369,6 @@ def check_condition(trp_str, cond, trp_str_from_db=''):
                 value = True
                 break
         cond = cond.replace(trp, str(not value))
-
-    # поиск триплетов в трипл. строке по данным из базы
     if len(trp_str_from_db) > 0:
         for trp in re.findall(RE_FUNC_PRESENT_WODS, cond):  # функция ЕСТЬ
             item = trp[5:-1].upper().split('.')  # извлекаем префикс и имя в кортеж
@@ -404,9 +406,9 @@ def check_condition(trp_str, cond, trp_str_from_db=''):
     # поиск срезов
     # CHECK
     for rplc in re.findall(RE_SLICE, cond):
-        si = str(int(rplc[1]) - 1)  # start index of slice; -1 необходимо для перевода среза из формата ВСПТД
-        fi = str(int(rplc[1]) + int(rplc[2]))  # final index of slice
-        cond.replace(rplc[0], '[{}:{}]'.format(si, fi))
+        # перевод индексов среза из формата ВСПТД
+        i = str(int(rplc[1]) - 1)
+        j = str(int(rplc[1]) + int(rplc[2]))
+        cond.replace(rplc[0], '[{}:{}]'.format(i, j))
 
-    # print('Конечное выражение: ', condition, sep='')
     return eval(cond)
