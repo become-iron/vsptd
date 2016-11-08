@@ -303,19 +303,21 @@ def check_condition(trp_str, cond, trp_str_from_db=''):
     проверяет истинность условия. Триплеты, указанные без префикса "$", заменяются
     соответствующими значениями, указанными в параметре trp_str_from_db
     Принимает:
-        trp_str (str) - триплексная строка
+        trp_str (str или TrpStr) - триплексная строка
         cond (str) - условие
-        trp_str_from_db (str) необязательный - триплексная строка по данным из базы данных
+        trp_str_from_db (str или TrpStr) необязательный - триплексная строка по данным из базы данных
     Возвращает:
         (bool) - результат проверки условия
     Вызывает исключение ValueError, если:
-        триплескная строка или условие не является строкой
+        триплескная строка или условие не является строкой или TrpStr
         получена пустая строка вместо триплексной строки или условия
         триплет из условия не найден в триплексной строке
         в условии не соблюден баланс скобок
     """
-    if not isinstance(trp_str, str) or not isinstance(trp_str_from_db, str):
-        raise ValueError('Триплексная строка должна быть строкой')
+    if not isinstance(trp_str, (str, TrpStr)):
+        raise ValueError('Триплексная строка должна быть строкой или TrpStr')
+    if not isinstance(trp_str_from_db, (str, TrpStr)):
+        raise ValueError('Триплексная строка должна быть строкой или TrpStr')
     if not isinstance(cond, str):
         raise ValueError('Условие должно быть строкой')
     if len(trp_str) == 0:
@@ -348,8 +350,10 @@ def check_condition(trp_str, cond, trp_str_from_db=''):
     for rplc in func_replacements:
         cond = cond.replace(rplc.upper(), rplc)
 
-    trp_str = parse_trp_str(trp_str)
-    trp_str_from_db = parse_trp_str(trp_str_from_db)
+    if isinstance(trp_str, str):
+        trp_str = parse_trp_str(trp_str)
+    if isinstance(trp_str_from_db, str):
+        trp_str_from_db = parse_trp_str(trp_str_from_db)
 
     # замены для функций ЕСТЬ и НЕТ
     # TODO оптимизировать
