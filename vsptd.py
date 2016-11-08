@@ -245,17 +245,21 @@ class TrpStr:
 def parse_trp_str(str_to_parse):
     """
     ПАРСИНГ ТРИПЛЕКСНОЙ СТРОКИ ИЗ str В TrpStr
+    Вернёт параметр str_to_parse без изменений, если он будет TrpStr
     Принимает:
         str_to_parse (str) - строка для парсинга
     Возвращает:
         (TrpStr) - распарсенная строка
     """
-    str_to_parse = re.findall(RE_TRIPLET, str_to_parse)
-    tmp_trp_str = []
-    for trp in str_to_parse:
-        value = _determine_value(trp[2])
-        tmp_trp_str += [Trp(trp[0], trp[1], value)]
-    return TrpStr(*tmp_trp_str)
+    if isinstance(str_to_parse, str):
+        str_to_parse = re.findall(RE_TRIPLET, str_to_parse)
+        tmp_trp_str = []
+        for trp in str_to_parse:
+            value = _determine_value(trp[2])
+            tmp_trp_str += [Trp(trp[0], trp[1], value)]
+        return TrpStr(*tmp_trp_str)
+    elif isinstance(str_to_parse, TrpStr):
+        return TrpStr
 
 
 def _determine_value(value):
