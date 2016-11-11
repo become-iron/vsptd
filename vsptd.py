@@ -139,14 +139,17 @@ class TrpStr:
             (str) - ключ
                 ключ формата 'префикс' -> TrpStr с триплетами, имеющими данный префикс
                 ключ формата 'префикс.имя' или '$префикс.имя' -> значение триплета
+            (list/tuple)
+                префикс и имя в кортеже (prefix, name) или в списке [prefix, name] -> значение триплета
             иначе - индекс/срез
                 -> TrpStr по заданному индексу/срезу
 
         Примеры:
-            trpStr[2]
-            trpStr[1:5]
-            trpStr['E']
-            trpStr['E.NM'] или trpStr['$E.NM']
+            TrpStr[2]
+            TrpStr[1:5]
+            TrpStr['E']
+            TrpStr['E.NM'] или trpStr['$E.NM']
+            TrpStr[('E', 'NM')] или TrpStr[['E', 'NM']]
         """
         # TODO CHECK
         # TODO добавить возможность приема ключа в виде списка и триплета
@@ -164,6 +167,17 @@ class TrpStr:
                     if trp.prefix == key[0] and trp.name == key[1]:
                         return trp.value
                 return None  # если ничего не найдено
+
+        # получить значение триплета по префиксу и имени, записанным в списке/кортеже: (prefix, name)
+        elif isinstance(key, (tuple, list)):
+            prefix, name = key
+            prefix = prefix.upper()
+            name = name.upper()
+            for trp in self.triplets:
+                if trp.prefix == prefix and trp.name == name:
+                    return trp.value
+            return None  # если ничего не найдено
+
         # получить триплексную строку по срезу/индексу
         # CHECK
         # WARN не противоречит ли ВСПТД?
