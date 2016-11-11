@@ -23,30 +23,27 @@ RE_TRIPLET_WODS = re.compile(r"([A-Za-z]+\d*)\.([A-Za-z]+)=(\'?[A-Za-zА-Яа-я
 RE_TRIPLET = re.compile(r"\$([A-Za-z]+\d*)\.([A-Za-z]+)=(\'?[A-Za-zА-Яа-яЁё0-9 :?.()]*\'?);")  # $префикс.имя=значение;
 
 
-_BID = ':'  # заявка (запрос полной информации по заданному объекту, определяемому префиксом)
-
-
 class Trp:
     """
     ТРИПЛЕТ
     Принимает:
         prefix (str) - префикс триплета
         name (str) - имя триплета
-        value (str, int, float, Trp, TrpStr) - значение триплета
+        value (str, int, float) - значение триплета
     """
     # WARN не реализованы случаи, когда значение является триплетом или трипл. строкой
     def __init__(self, prefix, name, value=''):
         if not isinstance(prefix, str):
-            raise ValueError('Префикс должен быть строкой: ' + prefix)
+            raise ValueError('Префикс должен быть строкой: ' + str(prefix))
         if not isinstance(name, str):
-            raise ValueError('Имя должно быть строкой: ' + name)
-        if not isinstance(value, (str, int, float, Trp, TrpStr)):
-            raise ValueError('Значение должно быть строкой, числом, триплетом или триплексной строкой: ' + value)
+            raise ValueError('Имя должно быть строкой: ' + str(name))
+        if not isinstance(value, (str, int, float)):
+            raise ValueError('Значение должно быть строкой или числом: ' + str(value))
         if re.match(RE_PREFIX, prefix) is None:
             raise ValueError('Неверный формат префикса: ' + prefix)
         if re.match(RE_NAME, name) is None:
             raise ValueError('Неверный формат имени: ' + name)
-        if isinstance(value, str) and value != _BID and re.match(RE_VALUE, value) is None:
+        if isinstance(value, str) and re.match(RE_VALUE, value) is None:
             raise ValueError('Неверный формат значения: ' + value)
 
         # префикс и имя приводятся к верхнему регистру
@@ -56,9 +53,7 @@ class Trp:
 
     def __str__(self):
         _ = '$' + self.prefix + '.' + self.name + '='
-        if self.value == _BID:
-            _ += _BID
-        elif isinstance(self.value, str):
+        if isinstance(self.value, str):
             _ += '\'' + self.value + '\''
         else:
             _ += str(self.value)
@@ -265,15 +260,15 @@ def parse_trp_str(str_to_parse):
     Возвращает:
         (TrpStr) - распарсенная строка
     """
-    if isinstance(str_to_parse, str):
-        str_to_parse = re.findall(RE_TRIPLET, str_to_parse)
-        tmp_trp_str = []
-        for trp in str_to_parse:
-            value = _determine_value(trp[2])
-            tmp_trp_str += [Trp(trp[0], trp[1], value)]
-        return TrpStr(*tmp_trp_str)
-    elif isinstance(str_to_parse, TrpStr):
+    if isinstance(str_to_parse, TrpStr):
         return TrpStr
+
+    str_to_parse = re.findall(RE_TRIPLET, str_to_parse)
+    tmp_trp_str = []
+    for trp in str_to_parse:
+        value = _determine_value(trp[2])
+        tmp_trp_str += [Trp(trp[0], trp[1], value)]
+    return TrpStr(*tmp_trp_str)
 
 
 def _determine_value(value):
@@ -287,9 +282,6 @@ def _determine_value(value):
     # строка
     elif value.startswith('\'') and value.endswith('\''):
         return value[1:-1]
-    # заявка
-    elif value == _BID:
-        return _BID
     # число
     else:
         try:
