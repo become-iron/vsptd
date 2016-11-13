@@ -24,7 +24,8 @@ RE_FUNC_ABSENCE_WODS = '(?:нет|НЕТ)\(' + RE_PREFIX_NAME_WODS + '\)'
 RE_SLICE = '(\[(\d+),(\d+)\])'  # срез [n,n]
 
 RE_RULE = 'ЕСЛИ (.+) ТО (.+);'  # правило
-RE_ACT_FIND_IN_DB = r'НАЙТИ_В_БД\((.*)\\\\(.*)(\+|-)\\\\\)'  # искать в БД
+RE_ACT_FIND_IN_DB = r'НАЙТИ_В_БД\((.*)\)'  # искать в БД
+RE_ACT_FIND_IN_DB_WO = r'НАЙТИ_В_БД\((.*)\\\\(.*)(\+|-)\\\\\)'  # искать в БД (with order by)
 RE_ACT_ADD_IN_DB = 'ДОБАВИТЬ_В_БД\((' + RE_PREFIX + ')\)'  # добавить в БД
 RE_ACT_DEL_FROM_DB = 'УДАЛИТЬ_В_БД\((' + RE_PREFIX + ')\)'  # удалить из БД
 
@@ -62,6 +63,7 @@ regexs = (('RE_PREFIX', islt_re(RE_PREFIX)),
 
           ('RE_RULE', islt_re(RE_RULE)),
           ('RE_ACT_FIND_IN_DB', islt_re(RE_ACT_FIND_IN_DB)),
+          ('RE_ACT_FIND_IN_DB_WO', islt_re(RE_ACT_FIND_IN_DB_WO)),
           ('RE_ACT_ADD_IN_DB', islt_re(RE_ACT_ADD_IN_DB)),
           ('RE_ACT_DEL_FROM_DB', islt_re(RE_ACT_DEL_FROM_DB))
           )

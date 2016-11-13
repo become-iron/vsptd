@@ -3,6 +3,8 @@
 
 import re
 
+__version__ = '1.4.0'
+
 # для реализации функции check_condition
 from math import sin, cos, tan, acos, atan, sinh, cosh, tanh, sqrt, exp
 from math import log as ln
