@@ -8,7 +8,7 @@ from math import sin, cos, tan, acos, atan, sinh, cosh, tanh, sqrt, exp
 from math import log as ln
 from math import log10 as log
 
-''
+
 # WODS - without dollar sign ('$')
 # NI - not isolated by '^' and '$'
 # TODO проверить целесообразность необособленных выражений
@@ -34,11 +34,11 @@ class Trp:
     # WARN не реализованы случаи, когда значение является триплетом или трипл. строкой
     def __init__(self, prefix, name, value=''):
         if not isinstance(prefix, str):
-            raise ValueError('Префикс должен быть строкой: ' + str(prefix))
+            raise TypeError('Префикс должен быть строкой: ' + str(prefix))
         if not isinstance(name, str):
-            raise ValueError('Имя должно быть строкой: ' + str(name))
+            raise TypeError('Имя должно быть строкой: ' + str(name))
         if not isinstance(value, (str, int, float)):
-            raise ValueError('Значение должно быть строкой или числом: ' + str(value))
+            raise TypeError('Значение должно быть строкой или числом: ' + str(value))
         if re.match(RE_PREFIX, prefix) is None:
             raise ValueError('Неверный формат префикса: ' + prefix)
         if re.match(RE_NAME, name) is None:
@@ -54,7 +54,7 @@ class Trp:
     def __str__(self):
         _ = '$' + self.prefix + '.' + self.name + '='
         if isinstance(self.value, str):
-            _ += '\'' + self.value + '\''
+            _ += "'" + self.value + "'"
         else:
             _ += str(self.value)
         _ += ';'
@@ -66,7 +66,7 @@ class Trp:
         if isinstance(other, TrpStr):
             return TrpStr(self, *other)
         else:
-            raise ValueError
+            raise TypeError('Должен быть триплет или триплексная строка')
 
     def __eq__(self, other):
         return isinstance(other, Trp) and \
@@ -82,17 +82,16 @@ class TrpStr:
         *triplets (Triplet) - триплеты
     """
     def __init__(self, *triplets):
-        # TODO добавить возможность создания строки по списку/кортежу
         for trp in triplets:  # CHECK проверить скорость работы через filter
             if not isinstance(trp, Trp):
-                raise ValueError('Аргументы должны быть триплетами')
+                raise TypeError('Должны быть триплеты')
         self.triplets = list(triplets)
 
         # удаление повторов триплетов (по префиксам и именам)
         for trp in self.triplets.copy():
-            # триплеты с данными префиксами и именами
             triplets_to_remove = [_trp for _trp in self.triplets if trp.prefix == _trp.prefix and trp.name == _trp.name]
-            triplets_to_remove = triplets_to_remove[:-1]  # исключение последнего найденного триплета
+            # исключение из списка на удаление последнего найденного триплета, который и останется в трипл. строке
+            triplets_to_remove = triplets_to_remove[:-1]
             for rem_trp in triplets_to_remove:
                 self.triplets.remove(rem_trp)
 
@@ -105,7 +104,7 @@ class TrpStr:
         elif isinstance(other, TrpStr):
             return TrpStr(*(self.triplets + other.triplets))
         else:
-            raise ValueError('Должен быть триплет или триплексная строка')
+            raise TypeError('Должен быть триплет или триплексная строка')
 
     def __str__(self):
         return ''.join(tuple(str(trp) for trp in self.triplets))
@@ -118,7 +117,7 @@ class TrpStr:
         """
         # TODO возможно, стоит включить возможность проверки включения по префиксу и имени
         if not isinstance(item, Trp):
-            raise ValueError('Должен быть триплет')
+            raise TypeError('Должен быть триплет')
 
         for trp in self.triplets:
             if trp.prefix == item.prefix and \
@@ -217,9 +216,9 @@ class TrpStr:
         Вызывает исключение ValueError, если триплет не найден
         """
         if not isinstance(prefix, str):
-            raise ValueError('Префикс должен быть строкой')
+            raise TypeError('Префикс должен быть строкой')
         if not isinstance(name, str):
-            raise ValueError('Имя должно быть строкой')
+            raise TypeError('Имя должно быть строкой')
         if re.match(RE_PREFIX, prefix) is None:
             raise ValueError('Неверный формат префикса')
         if re.match(RE_NAME, name) is None:
@@ -242,7 +241,7 @@ class TrpStr:
             prefix (str) - префикс
         """
         if not isinstance(prefix, str):
-            raise ValueError('Должен быть триплет')
+            raise TypeError('Должен быть триплет')
 
         prefix = prefix.upper()
 
@@ -280,7 +279,7 @@ def _determine_value(value):
     elif value == 'False':
         return False
     # строка
-    elif value.startswith('\'') and value.endswith('\''):
+    elif value.startswith("'") and value.endswith("'"):
         return value[1:-1]
     # число
     else:
@@ -304,7 +303,7 @@ def strcat(a, b):
     return a + b
 
 
-def check_condition(trp_str, cond, trp_str_from_db=''):
+def check_condition(cond, trp_str='', trp_str_from_db=''):
     # WARN используется небезопасный алгоритм, который также может не всегда верно работать
     # WARN потенциальная опасность заключена в использовании функции eval
     """
@@ -313,25 +312,24 @@ def check_condition(trp_str, cond, trp_str_from_db=''):
     проверяет истинность условия. Триплеты, указанные без префикса "$", заменяются
     соответствующими значениями, указанными в параметре trp_str_from_db
     Принимает:
-        trp_str (str или TrpStr) - триплексная строка
         cond (str) - условие
-        trp_str_from_db (str или TrpStr) необязательный - триплексная строка по данным из базы данных
+        trp_str (str или TrpStr) необяз.- триплексная строка
+        trp_str_from_db (str или TrpStr) необяз. - триплексная строка по данным из БД
     Возвращает:
         (bool) - результат проверки условия
+    Вызывает исключение TypeError, если:
+        триплескная строка/триплексная строка по данным из БД/условие не является строкой или TrpStr
     Вызывает исключение ValueError, если:
-        триплескная строка или условие не является строкой или TrpStr
-        получена пустая строка вместо триплексной строки или условия
-        триплет из условия не найден в триплексной строке
+        получена пустая строка вместо условия
+        триплет из условия не найден в триплексной строке или в триплексной строке по данным из БД
         в условии не соблюден баланс скобок
     """
     if not isinstance(trp_str, (str, TrpStr)):
-        raise ValueError('Триплексная строка должна быть строкой или TrpStr')
+        raise TypeError('Триплексная строка должна быть строкой или TrpStr')
     if not isinstance(trp_str_from_db, (str, TrpStr)):
-        raise ValueError('Триплексная строка должна быть строкой или TrpStr')
+        raise TypeError('Триплексная строка должна быть строкой или TrpStr')
     if not isinstance(cond, str):
-        raise ValueError('Условие должно быть строкой')
-    if len(trp_str) == 0:
-        raise ValueError('Пустая строка')
+        raise TypeError('Условие должно быть строкой')
     if len(cond) == 0:
         raise ValueError('Пустое условие')
 
@@ -406,15 +404,15 @@ def check_condition(trp_str, cond, trp_str_from_db=''):
         value = trp_str[trp[1:]]  # получаем значение триплета
         if value is None:
             raise ValueError('Триплет {} не найден в триплексной строке'.format(trp))
-        value = '\'' + value + '\'' if isinstance(value, str) else str(value)  # приводим к формату значений триплета
+        value = "'" + value + "'" if isinstance(value, str) else str(value)  # приводим к формату значений триплета
         cond = cond.replace(trp, value)
 
     # поиск триплетов в строке по данным из базы
     for trp in re.findall(RE_PREFIX_NAME_WODS_NI, cond):  # замена триплетов на их значения
         value = trp_str_from_db[trp]  # получаем значение триплета
         if value is None:
-            raise ValueError('Триплет {} не найден в триплескной строке из базы'.format(trp))
-        value = '\'' + value + '\'' if isinstance(value, str) else str(value)  # приводим к формату значений триплета
+            raise ValueError('Триплет {} не найден в триплескной строке по данным из БД'.format(trp))
+        value = "'" + value + "'" if isinstance(value, str) else str(value)  # приводим к формату значений триплета
         cond = cond.replace(trp, value)
 
     # поиск срезов
