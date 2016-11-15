@@ -178,7 +178,8 @@ class TrpStr:
         # CHECK
         # WARN не противоречит ли ВСПТД?
         else:
-            return TrpStr(*self.triplets[key])
+            _ = self.triplets[key]
+            return TrpStr(*_) if isinstance(_, TrpStr) else _
 
     def __eq__(self, other):
         # CHECK возможно, стоит замерить скорость работы
