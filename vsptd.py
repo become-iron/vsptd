@@ -68,7 +68,7 @@ class Trp:
         if isinstance(other, TrpStr):
             return TrpStr(self, *other)
         else:
-            raise TypeError('Должен быть триплет или триплексная строка')
+            raise TypeError('Должен быть триплет или триплетная строка')
 
     def __eq__(self, other):
         return isinstance(other, Trp) and \
@@ -79,7 +79,7 @@ class Trp:
 
 class TrpStr:
     """
-    ТРИПЛЕКСНАЯ СТРОКА
+    ТРИПЛЕТНАЯ СТРОКА
     Принимает:
         *triplets (Triplet) - триплеты
     """
@@ -106,7 +106,7 @@ class TrpStr:
         elif isinstance(other, TrpStr):
             return TrpStr(*(self.triplets + other.triplets))
         else:
-            raise TypeError('Должен быть триплет или триплексная строка')
+            raise TypeError('Должен быть триплет или триплетная строка')
 
     def __str__(self):
         return ''.join(tuple(str(trp) for trp in self.triplets))
@@ -148,7 +148,6 @@ class TrpStr:
             TrpStr[('E', 'NM')] или TrpStr[['E', 'NM']]
         """
         # TODO CHECK
-        # TODO добавить возможность приема ключа в виде списка и триплета
         if isinstance(key, str):  # элемент по ключу
             key = key.upper()
             # получить триплеты по префиксу в виде триплесной строки
@@ -174,7 +173,7 @@ class TrpStr:
                     return trp.value
             return None  # если ничего не найдено
 
-        # получить триплексную строку по срезу/индексу
+        # получить триплетную строку по срезу/индексу
         # CHECK
         # WARN не противоречит ли ВСПТД?
         else:
@@ -188,7 +187,6 @@ class TrpStr:
 
         if len(self.triplets) != len(other):
             return False
-        # WARN не обрабатывается случай, когда вторая трипл. строка является подмножеством первой
         for triplet in other:
             if triplet not in self.triplets:
                 return False
@@ -198,11 +196,11 @@ class TrpStr:
         return iter(self.triplets)
 
     def add(self, other):
-        """СЛОЖЕНИЕ ТРИПЛЕКСНОЙ СТРОКИ С ТРИПЛЕКСНОЙ СТРОКОЙ ИЛИ ТРИПЛЕТОМ
+        """СЛОЖЕНИЕ ТРИПЛЕТНОЙ СТРОКИ С ТРИПЛЕТНОЙ СТРОКОЙ ИЛИ ТРИПЛЕТОМ
         Практически эквивалентно сложению через оператор "+". Отличие в том, что данный метод не возвращает новый
         изменённый объект, а только изменяет нынешний.
         Принимает:
-            other (TrpStr или Trp) - триплексная строка или триплет
+            other (TrpStr или Trp) - триплетная строка или триплет
         Примеры:
             TtpStr + Trp
             TrpStr + TrpStr
@@ -212,7 +210,7 @@ class TrpStr:
     def del_trp(self, prefix, name):
         # CHECK
         """
-        УДАЛИТЬ ТРИПЛЕТ ИЗ ТРИПЛЕКСНОЙ СТРОКИ
+        УДАЛИТЬ ТРИПЛЕТ ИЗ ТРИПЛЕТНОЙ СТРОКИ
         Принимает:
             prefix (str) - префикс (1 латинский символ)
             name (str) - имя параметра (латинские символы)
@@ -239,7 +237,7 @@ class TrpStr:
     def del_trp_pref(self, prefix):
         # CHECK
         """
-        УДАЛИТЬ ИЗ ТРИПЛЕКСНОЙ СТРОКИ ВСЕ ТРИПЛЕТЫ С ЗАДАННЫМ ПРЕФИКСОМ
+        УДАЛИТЬ ИЗ ТРИПЛЕТНОЙ СТРОКИ ВСЕ ТРИПЛЕТЫ С ЗАДАННЫМ ПРЕФИКСОМ
         Принимает:
             prefix (str) - префикс
         """
@@ -255,7 +253,7 @@ class TrpStr:
 
 def parse_trp_str(str_to_parse):
     """
-    ПАРСИНГ ТРИПЛЕКСНОЙ СТРОКИ ИЗ str В TrpStr
+    ПАРСИНГ ТРИПЛЕТНОЙ СТРОКИ ИЗ str В TrpStr
     Вернёт параметр str_to_parse без изменений, если он будет TrpStr
     Принимает:
         str_to_parse (str) - строка для парсинга
@@ -316,21 +314,21 @@ def check_condition(cond, trp_str='', trp_str_from_db=''):
     соответствующими значениями, указанными в параметре trp_str_from_db
     Принимает:
         cond (str) - условие
-        trp_str (str или TrpStr) необяз.- триплексная строка
-        trp_str_from_db (str или TrpStr) необяз. - триплексная строка по данным из БД
+        trp_str (str или TrpStr) необяз.- триплетная строка
+        trp_str_from_db (str или TrpStr) необяз. - триплетная строка по данным из БД
     Возвращает:
         (bool) - результат проверки условия
     Вызывает исключение TypeError, если:
-        триплескная строка/триплексная строка по данным из БД/условие не является строкой или TrpStr
+        триплескная строка/триплетная строка по данным из БД/условие не является строкой или TrpStr
     Вызывает исключение ValueError, если:
         получена пустая строка вместо условия
-        триплет из условия не найден в триплексной строке или в триплексной строке по данным из БД
+        триплет из условия не найден в триплетной строке или в триплетной строке по данным из БД
         в условии не соблюден баланс скобок
     """
     if not isinstance(trp_str, (str, TrpStr)):
-        raise TypeError('Триплексная строка должна быть строкой или TrpStr')
+        raise TypeError('Триплетная строка должна быть строкой или TrpStr')
     if not isinstance(trp_str_from_db, (str, TrpStr)):
-        raise TypeError('Триплексная строка должна быть строкой или TrpStr')
+        raise TypeError('Триплетная строка должна быть строкой или TrpStr')
     if not isinstance(cond, str):
         raise TypeError('Условие должно быть строкой')
     if len(cond) == 0:
@@ -406,7 +404,7 @@ def check_condition(cond, trp_str='', trp_str_from_db=''):
     for trp in re.findall(RE_PREFIX_NAME_NI, cond):  # замена триплетов на их значения
         value = trp_str[trp[1:]]  # получаем значение триплета
         if value is None:
-            raise ValueError('Триплет {} не найден в триплексной строке'.format(trp))
+            raise ValueError('Триплет {} не найден в триплетной строке'.format(trp))
         value = "'" + value + "'" if isinstance(value, str) else str(value)  # приводим к формату значений триплета
         cond = cond.replace(trp, value)
 
