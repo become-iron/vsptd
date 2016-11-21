@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-""" Работа с ВСПТД в ООП-стиле """
+"""vsptd — библиотека для работы с ВСПТД в Python"""
 
 import re
 
@@ -41,11 +41,11 @@ class Trp:
             raise TypeError('Имя должно быть строкой: ' + str(name))
         if not isinstance(value, (str, int, float)):
             raise TypeError('Значение должно быть строкой или числом: ' + str(value))
-        if re.match(RE_PREFIX, prefix) is None:
+        if re.fullmatch(RE_PREFIX, prefix) is None:
             raise ValueError('Неверный формат префикса: ' + prefix)
-        if re.match(RE_NAME, name) is None:
+        if re.fullmatch(RE_NAME, name) is None:
             raise ValueError('Неверный формат имени: ' + name)
-        if isinstance(value, str) and re.match(RE_VALUE, value) is None:
+        if isinstance(value, str) and re.fullmatch(RE_VALUE, value) is None:
             raise ValueError('Неверный формат значения: ' + value)
 
         # префикс и имя приводятся к верхнему регистру
@@ -81,7 +81,7 @@ class TrpStr:
     """
     ТРИПЛЕТНАЯ СТРОКА
     Принимает:
-        *triplets (Triplet) - триплеты
+        *triplets (Trp) - триплеты
     """
     def __init__(self, *triplets):
         for trp in triplets:  # CHECK проверить скорость работы через filter
@@ -147,30 +147,33 @@ class TrpStr:
             TrpStr['E.NM'] или trpStr['$E.NM']
             TrpStr[('E', 'NM')] или TrpStr[['E', 'NM']]
         """
+        # TODO не должно вызывать исключение (KeyError), если ничего не найден?
         # TODO CHECK
         if isinstance(key, str):  # элемент по ключу
             key = key.upper()
             # получить триплеты по префиксу в виде триплесной строки
-            if re.match(RE_PREFIX, key) is not None:
+            if re.fullmatch(RE_PREFIX, key) is not None:
                 return TrpStr(*[trp for trp in self.triplets if trp.prefix == key])
             # получить значение триплета по префиксу и имени
-            elif (re.match(RE_PREFIX_NAME_WODS, key) is not None) or (re.match(RE_PREFIX_NAME, key) is not None):
+            # TODO удалить?
+            elif (re.fullmatch(RE_PREFIX_NAME_WODS, key) is not None) or \
+                 (re.fullmatch(RE_PREFIX_NAME, key) is not None):
                 if key.startswith('$'):
                     key = key[1:]
-                key = key.upper().split('.')
-                for trp in self.triplets:
-                    if trp.prefix == key[0] and trp.name == key[1]:
-                        return trp.value
+                _prefix, _name = key.upper().split('.')
+                for prefix, name, value in self.triplets:
+                    if prefix == _prefix and name == _name:
+                        return value
                 return None  # если ничего не найдено
 
         # получить значение триплета по префиксу и имени, записанным в списке/кортеже: (prefix, name)
         elif isinstance(key, (tuple, list)):
-            prefix, name = key
-            prefix = prefix.upper()
-            name = name.upper()
-            for trp in self.triplets:
-                if trp.prefix == prefix and trp.name == name:
-                    return trp.value
+            _prefix, _name = key
+            _prefix = _prefix.upper()
+            _name = _name.upper()
+            for prefix, name, value in self.triplets:
+                if prefix == _prefix and name == _name:
+                    return value
             return None  # если ничего не найдено
 
         # получить триплетную строку по срезу/индексу
@@ -178,7 +181,7 @@ class TrpStr:
         # WARN не противоречит ли ВСПТД?
         else:
             _ = self.triplets[key]
-            return TrpStr(*_) if isinstance(_, TrpStr) else _
+            return TrpStr(*_) if isinstance(_, list) else _
 
     def __eq__(self, other):
         # CHECK возможно, стоит замерить скорость работы
@@ -201,9 +204,6 @@ class TrpStr:
         изменённый объект, а только изменяет нынешний.
         Принимает:
             other (TrpStr или Trp) - триплетная строка или триплет
-        Примеры:
-            TtpStr + Trp
-            TrpStr + TrpStr
         """
         self.triplets = self.__add__(other).triplets
 
@@ -220,9 +220,9 @@ class TrpStr:
             raise TypeError('Префикс должен быть строкой')
         if not isinstance(name, str):
             raise TypeError('Имя должно быть строкой')
-        if re.match(RE_PREFIX, prefix) is None:
+        if re.fullmatch(RE_PREFIX, prefix) is None:
             raise ValueError('Неверный формат префикса')
-        if re.match(RE_NAME, name) is None:
+        if re.fullmatch(RE_NAME, name) is None:
             raise ValueError('Неверный формат имени')
 
         prefix = prefix.upper()
@@ -242,7 +242,9 @@ class TrpStr:
             prefix (str) - префикс
         """
         if not isinstance(prefix, str):
-            raise TypeError('Должен быть триплет')
+            raise TypeError('Префикс должен быть строкой')
+        if re.fullmatch(RE_PREFIX, prefix) is None:
+            raise ValueError('Неверный формат префикса')
 
         prefix = prefix.upper()
 
@@ -260,34 +262,32 @@ def parse_trp_str(str_to_parse):
     Возвращает:
         (TrpStr) - распарсенная строка
     """
+    def _determine_value(value):
+        """ОПРЕДЕЛЕНИЕ ТИПА ЗНАЧЕНИЯ ТРИПЛЕТА"""
+        # TODO определение триплета, трипл. строки
+        # булево значение
+        if value == 'True':
+            return True
+        elif value == 'False':
+            return False
+        # строка
+        elif value.startswith("'") and value.endswith("'"):
+            # TODO проверка значения
+            return value[1:-1]
+        # число
+        else:
+            try:
+                return float(value) if '.' in value else int(value)
+            except ValueError:
+                raise ValueError('Неверное значение триплета: ' + value)
+
     if isinstance(str_to_parse, TrpStr):
         return TrpStr
 
+    # TODO доработка парсинга
     str_to_parse = re.findall(RE_TRIPLET, str_to_parse)
-    tmp_trp_str = []
-    for trp in str_to_parse:
-        value = _determine_value(trp[2])
-        tmp_trp_str += [Trp(trp[0], trp[1], value)]
-    return TrpStr(*tmp_trp_str)
-
-
-def _determine_value(value):
-    """ОПРЕДЕЛЕНИЕ ТИПА ЗНАЧЕНИЯ ТРИПЛЕТА"""
-    # TODO определение триплета, трипл. строки
-    # булево значение
-    if value == 'True':
-        return True
-    elif value == 'False':
-        return False
-    # строка
-    elif value.startswith("'") and value.endswith("'"):
-        return value[1:-1]
-    # число
-    else:
-        try:
-            return float(value) if '.' in value else int(value)
-        except ValueError:
-            raise ValueError('Неверное значение триплета: ' + value)
+    result = TrpStr(*(Trp(prefix, name, _determine_value(value)) for prefix, name, value in str_to_parse))
+    return result
 
 
 # ======= РЕАЛИЗАЦИЯ ФУНКЦИИ ВЫЧИСЛЕНИЯ УСЛОВИЯ В ПРАВИЛЕ ВЫВОДА =======
