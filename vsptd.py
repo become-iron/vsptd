@@ -11,6 +11,8 @@ from math import log as ln
 from math import log10 as log
 
 
+BIND = ':'  # TODO заявка
+
 # WODS - without dollar sign ('$')
 # NI - not isolated by '^' and '$'
 # TODO проверить целесообразность необособленных выражений
@@ -43,11 +45,12 @@ class Trp:
             raise TypeError('Имя должно быть строкой: ' + str(name))
         if not isinstance(value, (str, int, float)):
             raise TypeError('Значение должно быть строкой или числом: ' + str(value))
+
         if re.fullmatch(RE_PREFIX, prefix) is None:
             raise ValueError('Неверный формат префикса: ' + prefix)
         if re.fullmatch(RE_NAME, name) is None:
             raise ValueError('Неверный формат имени: ' + name)
-        if isinstance(value, str) and re.fullmatch(RE_VALUE, value) is None:
+        if isinstance(value, str) and value != BIND and re.fullmatch(RE_VALUE, value) is None:
             raise ValueError('Неверный формат значения: ' + value)
 
         # префикс и имя приводятся к верхнему регистру
@@ -58,7 +61,10 @@ class Trp:
     def __str__(self):
         _ = '$' + self.prefix + '.' + self.name + '='
         if isinstance(self.value, str):
-            _ += "'" + self.value + "'"
+            if self.value == BIND:
+                _ += self.value
+            else:
+                _ += "'" + self.value + "'"
         else:
             _ += str(self.value)
         _ += ';'
