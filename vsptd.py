@@ -3,7 +3,7 @@
 
 import re
 
-__version__ = '1.5.0'
+__version__ = '1.5.1'
 
 # для реализации функции check_condition
 from math import sin, cos, tan, acos, atan, sinh, cosh, tanh, sqrt, exp
