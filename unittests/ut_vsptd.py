@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from vsptd import Trp, TrpStr
+from vsptd import *
 import unittest
 
 
@@ -63,6 +63,11 @@ class TestTriplexString(unittest.TestCase):
 
     # TODO
 
+
+class TestParseTrpStr(unittest.TestCase):
+    def test_parse_trp_str(self):
+        self.assertEqual(parse_trp_str("$A.B='C';$D.E='F';$G.H='I';"),
+                         TrpStr(Trp('A', 'B', 'C'), Trp('D', 'E', 'F'), Trp('G', 'H', 'I')))
 
 if __name__ == '__main__':
     unittest.main()

@@ -14,15 +14,17 @@ from math import log10 as log
 # WODS - without dollar sign ('$')
 # NI - not isolated by '^' and '$'
 # TODO проверить целесообразность необособленных выражений
-RE_PREFIX = re.compile(r"^[A-Za-z]+\d*$")  # префикс
+RE_PREFIX = re.compile(r"^(?!.{25})[A-Za-z]+\d*$")  # префикс
 RE_NAME = re.compile(r"^[A-Za-z]+$")  # имя
-RE_VALUE = re.compile(r"^\'?[A-Za-zА-Яа-яЁё0-9 :?.()]*\'?$")  # значение
-RE_PREFIX_NAME_WODS_NI = re.compile(r"[A-Za-z]+\d*\.[A-Za-z]+")  # префикс.имя
-RE_PREFIX_NAME_WODS = re.compile(r"^[A-Za-z]+\d*\.[A-Za-z]+$")  # префикс.имя
-RE_PREFIX_NAME_NI = re.compile(r"\$[A-Za-z]+\d*\.[A-Za-z]+")  # $префикс.имя
-RE_PREFIX_NAME = re.compile(r"^\$[A-Za-z]+\d*\.[A-Za-z]+$")  # $префикс.имя
-RE_TRIPLET_WODS = re.compile(r"([A-Za-z]+\d*)\.([A-Za-z]+)=(\'?[A-Za-zА-Яа-яЁё0-9 :?.()]*\'?);")  # префикс.имя=значение;
-RE_TRIPLET = re.compile(r"\$([A-Za-z]+\d*)\.([A-Za-z]+)=(\'?[A-Za-zА-Яа-яЁё0-9 :?.()]*\'?);")  # $префикс.имя=значение;
+RE_VALUE = re.compile(r"^'?[\wА-Яа-яЁё ()-.:?–—−]*'?$")  # значение
+RE_PREFIX_NAME_WODS_NI = re.compile(r"(?=.{0,24}\.)[A-Za-z]+\d*\.[A-Za-z]+")  # префикс.имя
+RE_PREFIX_NAME_WODS = re.compile(r"^(?=.{0,24}\.)[A-Za-z]+\d*\.[A-Za-z]+$")  # префикс.имя
+RE_PREFIX_NAME_NI = re.compile(r"\$(?=.{0,24}\.)[A-Za-z]+\d*\.[A-Za-z]+")  # $префикс.имя
+RE_PREFIX_NAME = re.compile(r"^\$(?=.{0,24}\.)[A-Za-z]+\d*\.[A-Za-z]+$")  # $префикс.имя
+# префикс.имя=значение;
+RE_TRIPLET_WODS = re.compile(r"((?=.{0,24}\.)[A-Za-z]+\d*)\.([A-Za-z]+)=('?[\wА-Яа-яЁё ()-.:?–—−]*'?);")
+# $префикс.имя=значение;
+RE_TRIPLET = re.compile(r"\$((?=.{0,24}\.)[A-Za-z]+\d*)\.([A-Za-z]+)=('?[\wА-Яа-яЁё ()-.:?–—−]*'?);")
 
 
 class Trp:
@@ -292,10 +294,10 @@ def parse_trp_str(str_to_parse):
 
 # ======= РЕАЛИЗАЦИЯ ФУНКЦИИ ВЫЧИСЛЕНИЯ УСЛОВИЯ В ПРАВИЛЕ ВЫВОДА =======
 
-RE_FUNC_PRESENT = re.compile(r'(?:есть|ЕСТЬ)\(\$[A-Za-z]+\d*\.[A-Za-z]+\)')  # функция ЕСТЬ
-RE_FUNC_PRESENT_WODS = re.compile(r'(?:есть|ЕСТЬ)\([A-Za-z]+\d*\.[A-Za-z]+\)')  # функция ЕСТЬ без $
-RE_FUNC_ABSENCE = re.compile(r'(?:нет|НЕТ)\([A-Za-z]+\d*\.[A-Za-z]+\)')  # функция НЕТ
-RE_FUNC_ABSENCE_WODS = re.compile(r'(?:нет|НЕТ)\([A-Za-z]+\d*\.[A-Za-z]+\)')  # функция НЕТ без $
+RE_FUNC_PRESENT = re.compile(r"(?:есть|ЕСТЬ)\(\$(?=.{0,24}\.)[A-Za-z]+\d*\.[A-Za-z]+\)")  # функция ЕСТЬ
+RE_FUNC_PRESENT_WODS = re.compile(r"(?:есть|ЕСТЬ)\((?=.{0,24}\.)[A-Za-z]+\d*\.[A-Za-z]+\)")  # функция ЕСТЬ без $
+RE_FUNC_ABSENCE = re.compile(r"(?:нет|НЕТ)\((?=.{0,24}\.)[A-Za-z]+\d*\.[A-Za-z]+\)")  # функция НЕТ
+RE_FUNC_ABSENCE_WODS = re.compile(r"(?:нет|НЕТ)\((?=.{0,24}\.)[A-Za-z]+\d*\.[A-Za-z]+\)")  # функция НЕТ без $
 RE_SLICE = re.compile(r'(\[(\d+),(\d+)\])')  # срез [n,n]
 
 
