@@ -269,6 +269,7 @@ def parse_trp_str(str_to_parse):
         str_to_parse (str) - строка для парсинга
     Возвращает:
         (TrpStr) - распарсенная строка
+    Вызывает исключение TypeError, если параметр str_to_parse не str или не TrpStr
     """
     def _determine_value(value):
         """ОПРЕДЕЛЕНИЕ ТИПА ЗНАЧЕНИЯ ТРИПЛЕТА"""
@@ -282,6 +283,8 @@ def parse_trp_str(str_to_parse):
         elif value.startswith("'") and value.endswith("'"):
             # TODO проверка значения
             return value[1:-1]
+        elif value == BIND:
+            return value
         # число
         else:
             try:
@@ -291,6 +294,8 @@ def parse_trp_str(str_to_parse):
 
     if isinstance(str_to_parse, TrpStr):
         return TrpStr
+    elif not isinstance(str_to_parse, str):
+        raise TypeError('Должна быть строка')
 
     # TODO доработка парсинга
     str_to_parse = re.findall(RE_TRIPLET, str_to_parse)
