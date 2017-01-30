@@ -138,43 +138,50 @@ class Trp:
     :param str prefix:  префикс триплета
     :param str name: имя триплета
     :param value: значение триплета; None по умолчанию
-    :type value: str, int, float, bool, Trp, TrpStr, TrpExpr, необяз.
+    :type value: str, int, float, bool, Trp, TrpExpr, необяз.
     :param comment: комментарий; пустая строка по умолчанию
     :type comment: str, необяз.
-    :param special:
+    :param special: "особенный" триплет
     :type special: bool, необяз.
+    :param bid: заявка
+    :type bid: bool, необяз.
 
     :raises TypeError: если параметры не соответствующих типов
-    :raises ValueError: если параметры не удовлетворяют соответствующим требованиям.
+    :raises ValueError: если параметры не удовлетворяют соответствующим требованиям
+    :raises ValueError: при попытке использовать в качестве значения триплет, не являющийся триплетом-ссылкой
     :raises AttributeError: при попытке изменить свойства `prefix` и `name`
 
     :Пример работы:
         >>> Trp('A', 'B', 'C')
         Trp(prefix='A', name='B', value='C')
     """
+    # TODO нужна ли проверка при различных сочетаниях параметров?
     #: Настройки конфигурации ВСПТД :class:`VSPTDSettings`; по умолчанию используются стандартные
     settings = VSPTDSettings()
 
-    __slots__ = ('__prefix', '__name', '__value', '__comment', '__special')
+    __slots__ = ('__prefix', '__name', '__value', '__comment', '__special', '__bid')
 
-    def __init__(self, prefix: str, name: str, value=None, comment='', special=False):
+    def __init__(self, prefix: str, name=None, value=None, comment=None, special=False, bid=False):
         if not isinstance(prefix, str):
             raise TypeError('Префикс должен быть str, не ' + type_name(prefix), prefix)
-        if not isinstance(name, str):
+        if not isinstance(name, str) and name is not None:
             raise TypeError('Имя должно быть str, не ' + type_name(name), name)
 
         self.settings.validate_prefix(prefix)
-        self.settings.validate_name(name)
+        if isinstance(name, str):
+            self.settings.validate_name(name)
         self.__prefix = prefix
         self.__name = name
-        # установка свойств value, comment, special выполняется
+        # установка свойств value, comment, special, bind выполняется
         # таким образом с целью их валидации через setter'ы
-        self.__special = False
-        self.special = special
         self.__value = None
         self.value = value
-        self.__comment = ''
+        self.__comment = None
         self.comment = comment
+        self.__special = False
+        self.special = special
+        self.__bid = False
+        self.bid = bid
 
     @property
     def prefix(self):
@@ -193,13 +200,13 @@ class Trp:
 
     @value.setter
     def value(self, value):
-        if self.__special:
-            return
-        if not isinstance(value, (str, int, float, bool, Trp, TrpStr, TrpExpr)) and value is not None:
+        if not isinstance(value, (str, int, float, bool, Trp, TrpExpr)) and value is not None:
             raise TypeError(
-                'Значение должно быть str, int, float, bool, Trp, TrpStr, TrpExpr, не ' + type_name(value),
+                'Значение должно быть str, int, float, bool, Trp, TrpExpr, не ' + type_name(value),
                 value
             )
+        if isinstance(value, Trp) and value.value is None and value.bid:
+            raise ValueError('В качестве значения можно использовать только триплет-ссылку', value)
         if isinstance(value, str):
             self.settings.validate_value(value)
         self.__value = value
@@ -211,11 +218,9 @@ class Trp:
 
     @comment.setter
     def comment(self, value):
-        if self.__value is None:
-            return
-        if not isinstance(value, str):
+        if not isinstance(value, str) and value is not None:
             raise TypeError('Комментарий должен быть str, не ' + type_name(value), value)
-        if value != '':
+        if value != '' and value is not None:
             self.settings.validate_comment(value)
         self.__comment = value
 
@@ -229,6 +234,17 @@ class Trp:
         if not isinstance(value, bool):
             raise TypeError('Параметр special должен быть bool, не ' + type_name(value), value)
         self.__special = value
+
+    @property
+    def bid(self):
+        return self.__bid
+
+    @bid.setter
+    def bid(self, value):
+        """Заявка"""
+        if not isinstance(value, bool):
+            raise TypeError('Параметр заявки должен быть bool, не ' + type_name(value), value)
+        self.__bid = value
 
     def __add__(self, other):
         if isinstance(other, Trp):
@@ -250,37 +266,42 @@ class Trp:
         result = ''
         if not self.special:
             result += trp_start
-        result += self.prefix + trp_pn_sprtr + self.name
-        if self.value is None or self.special:
-            # если не указано значение триплета, то считаем, что это триплет-ссылка
+        result += self.prefix + trp_pn_sprtr
+        if self.name is not None:
+            result += self.name
+        if self.value is None and not self.bid:
+            # если не указано значение триплета и это не заявка, то считаем, что это триплет-ссылка
             return result
-        else:
-            result += trp_nv_sprtr
-        if isinstance(self.value, str):
-            if self.value == bid:
-                result += self.value
-            else:
+        result += trp_nv_sprtr
+        if self.bid:
+            result += bid
+        if self.value is not None:
+            if isinstance(self.value, str):
                 result += trp_str_isltr + self.value + trp_str_isltr
-        else:
-            result += str(self.value)
-        if self.comment != '':
+            else:
+                result += str(self.value)
+        if self.comment is not None:
             result += trp_comment_isltr + self.comment + trp_comment_isltr
         result += trp_end
         return result
 
     def __repr__(self):
-        result = 'Trp(prefix=%r, name=%r' % (self.prefix, self.name)
+        result = 'Trp(prefix=%r' % self.prefix
+        if self.name is not None:
+            result += ', name=%r' % self.name
         if self.value is not None:
             result += ', value=%r' % self.value
-        if self.comment != '':
+        if self.comment is not None:
             result += ', comment=%r' % self.comment
         if self.special:
             result += ', special=%r' % self.special
+        if self.bid:
+            result += ', bid=%r' % self.bid
         result += ')'
         return result
 
     def __eq__(self, other):
-        # TODO проверять ли и комментарий?
+        # TODO проверять ли и комментарий, special, bid?
         return isinstance(other, Trp) and \
                self.prefix == other.prefix and \
                self.name == other.name and \
@@ -364,15 +385,15 @@ class TrpStr:
 
     def __add__(self, other):
         if isinstance(other, Trp):
-            _ = TrpStr()
-            _.__trps.update(self.__trps)
-            _.__trps.update({(other.prefix, other.name): other})
-            return _
+            result = TrpStr()
+            result.__trps.update(self.__trps)
+            result.__trps.update({(other.prefix, other.name): other})
+            return result
         elif isinstance(other, TrpStr):
-            _ = TrpStr()
-            _.__trps.update(self.__trps)
-            _.__trps.update(other.__trps)
-            return _
+            result = TrpStr()
+            result.__trps.update(self.__trps)
+            result.__trps.update(other.__trps)
+            return result
         else:
             raise TypeError('Должен быть Trp или TrpStr, не ' + type_name(other), other)
 
@@ -400,7 +421,7 @@ class TrpStr:
         else:
             raise TypeError('Должен быть Trp или TrpStr, не ' + type_name(other), other)
 
-    def get(self, prefix: str, name: str):
+    def get(self, prefix: str, name):
         """
         Возвращает из триплетной строки триплет по заданным префиксу и имени
 
@@ -409,11 +430,13 @@ class TrpStr:
         :param str prefix: префикс
         :param str name: имя
         :rtype: Trp
+
         :raises KeyError: если по заданным префиксу и имени триплет не найден
         :raises ValueError: префикс/имя не удовлетворяет соответствующим требованиям
         """
         self.settings.validate_prefix(prefix)
-        self.settings.validate_name(name)
+        if isinstance(name, str):
+            self.settings.validate_name(name)
 
         try:
             return self.__trps[prefix, name]
@@ -428,18 +451,19 @@ class TrpStr:
 
         :param str prefix: префикс
         :rtype: TrpStr
+
         :raises KeyError: если по заданному префиксу триплетов не найдено
         :raises ValueError: префикс не удовлетворяет соответствующим требованиям
         """
         self.settings.validate_prefix(prefix)
 
-        _ = TrpStr()
-        _.__trps.update({key: self.__trps[key] for key in self.__trps if key[0] == prefix})
-        if len(_.__trps) == 0:
+        result = TrpStr()
+        result.__trps.update({key: self.__trps[key] for key in self.__trps if key[0] == prefix})
+        if len(result.__trps) == 0:
             raise KeyError('По заданному префиксу триплетов не найдено', prefix)
-        return _
+        return result
 
-    def rem(self, prefix: str, name: str) -> None:
+    def rem(self, prefix: str, name) -> None:
         """
         Удаляет из триплетной строки триплет по заданным префиксу и имени
 
@@ -447,11 +471,13 @@ class TrpStr:
 
         :param str prefix: префикс
         :param str name: имя параметра
+
         :raises KeyError: если по заданным префиксу и имени триплет не найден
         :raises ValueError: префикс/имя не удовлетворяет соответствующим требованиям
         """
         self.settings.validate_prefix(prefix)
-        self.settings.validate_name(name)
+        if isinstance(name, str):
+            self.settings.validate_name(name)
 
         try:
             del self.__trps[prefix, name]
@@ -465,6 +491,7 @@ class TrpStr:
         Эквивалентно ``del <TrpStr>[prefix]``
 
         :param str prefix: префикс
+
         :raises KeyError: если по заданному префиксу триплетов не найдено
         :raises ValueError: префикс не удовлетворяет соответствующим требованиям
         """
@@ -476,19 +503,6 @@ class TrpStr:
         self.__trps = {key: item for key, item in self.__trps.items() if key[0] != prefix}
         if count == len(self.__trps):
             raise KeyError('По заданному префиксу триплетов не найдено', prefix)
-
-    # def satisfy_bid(self, bid):
-    #     """
-    #     Возвращает данные согласно заявке
-    #
-    #     Данный метод представляет собой более высокоуровневый инструмент, чем другие (get, getpr, rem, rempr).
-    #     Заявка должна быть представлена в виде триплета особого вида
-    #
-    #     :param Trp bid:
-    #     :return:
-    #     """
-    #     # TODO проверить необходимость
-    #     pass
 
     # def sort(self) -> None:
     #     """
@@ -505,6 +519,7 @@ class TrpExpr:
         * операторы должны быть в виде строк `str`.
     :param `*items`: параметры
     :type `*items`: str, int, float, bool, Trp
+
     :raises TypeError: если элемент не str, int, float, bool или Trp
     :Пример работы:
         >>> expr = TrpExpr( Trp('A', 'B'), '*', Trp('C', 'D') )
