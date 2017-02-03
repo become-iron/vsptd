@@ -5,4 +5,5 @@
 
    vsptd
    parse
+   extra
    support
