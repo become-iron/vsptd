@@ -1,11 +1,30 @@
 # -*- coding: utf-8 -*-
+"""Набор функций для использования во внутренней работе пакета."""
+
+
+def type_name(value) -> str:
+    """
+    Возвращает строковое представление названия класса принимаемого объекта
+
+    :param Any value: объект
+    :rtype: str
+    :Пример работы:
+        >>> type_name('abcd')
+        'str'
+        >>> type_name(4.5)
+        'float'
+    """
+    return value.__class__.__name__
+
+
 def isfloat(value: str) -> bool:
     """
     Определяет, является ли строка числом с плавающей запятой
 
     :param str value: строка для определения
     :rtype: bool
-    :Пример:
+
+    :Пример работы:
         >>> isfloat('word')
         False
         >>> isfloat('12')
@@ -24,21 +43,6 @@ def isfloat(value: str) -> bool:
     except ValueError:
         pass
     return False
-
-
-def type_name(value) -> str:
-    """
-    Возвращает строковое представление названия класса принимаемого объекта
-
-    :param Any value: объект
-    :rtype: str
-    :Примеры:
-        >>> type_name('abcd')
-        'str'
-        >>> type_name(4.5)
-        'float'
-    """
-    return value.__class__.__name__
 
 
 def group(value: str) -> str:

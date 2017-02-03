@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+"""Разбор строк на ВСПТД-структуры, а также генерация соответствующих регулярных выражений."""
+
 import re
 
 from vsptd.vsptd import Trp, TrpStr, TrpExpr, VSPTDSettings
@@ -51,6 +53,22 @@ class VSPTDParse:
         # TODO
         # self.__re_trp_expr =
 
+        # RE_FUNC_PRESENT = '(?:есть|ЕСТЬ)\(' + RE_PREFIX_NAME + '\)'
+        # RE_FUNC_PRESENT_WODS = '(?:есть|ЕСТЬ)\(' + RE_PREFIX_NAME_WODS + '\)'
+        # RE_FUNC_ABSENCE = '(?:нет|НЕТ)\(' + RE_PREFIX_NAME + '\)'
+        # RE_FUNC_ABSENCE_WODS = '(?:нет|НЕТ)\(' + RE_PREFIX_NAME_WODS + '\)'
+        # RE_SLICE = r'(\[(\d+),(\d+)\])'  # срез [n,n]
+        #
+        # # правило и действия
+        # RE_RULE = 'ЕСЛИ (.+) ТО (.+);'  # правило
+        # RE_ACT_FIND_IN_DB = r'НАЙТИ_В_БД\((.*)\)'  # искать в БД
+        # RE_ACT_FIND_IN_DB_WO = r'НАЙТИ_В_БД\((.*)\\\\(.*)(\+|-)\\\\\)'  # искать в БД (with o
+        # RE_ACT_ADD_IN_DB = 'ДОБАВИТЬ_В_БД\((' + _RE_PREFIX + ')\)'  # добавить в БД
+        # RE_ACT_DEL_FROM_DB = 'УДАЛИТЬ_В_БД\((' + _RE_PREFIX + ')\)'  # удалить из БД
+        #
+        # # реквизит
+        # RE_RQST = '\$(' + _RE_PREFIX + ')\.(' + RE_NAME + ')(?:(\||:)(' + RE_VALUE + ')?)?'
+
     re_trp_ref_special = property(lambda self: self.__re_trp_ref_special)  #: RegExp для разбора строки: ``P.N``
     re_trp_ref = property(lambda self: self.__re_trp_ref)  #: RegExp для разбора строки: ``$P.N``
     re_trp_special = property(lambda self: self.__re_trp_special)  #: RegExp для разбора строки: ``P.N=V;``
@@ -58,7 +76,7 @@ class VSPTDParse:
     re_trps = property(lambda self: self.__re_trps)  #: RegExp для разбора строки на триплетную строку
 
     def __repr__(self):
-        return '<%s>' % VSPTDParse.__name__
+        return '<{}>'.format(VSPTDParse.__name__)
 
 
 def parse_trp():
@@ -74,10 +92,12 @@ def parse_trp_str(str_to_parse: str, parse_settings=VSPTDParse()):
     :Примечания:
         * функцией можно парсить и триплеты, но вернётся всё равно триплетная строка :class:`TrpStr`;
         * вернёт параметр `str_to_parse` без изменений, если он будет :class:`TrpStr`.
+
     :param str str_to_parse: строка для парсинга
     :param parse_settings:  настройки конфигурации ВСПТД; по умолчанию используются стандартные
     :type parse_settings: VSPTDParse, необяз.
     :rtype: TrpStr
+
     :raises TypeError: если `str_to_parse` не `str` и не :class:`TrpStr`
     :raises ValueError: неверный формат значения триплета
     """

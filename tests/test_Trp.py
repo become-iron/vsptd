@@ -29,6 +29,7 @@ class TestTrp(unittest.TestCase):
 
     def test_attribute_access(self):
         """Доступ к параметрам"""
+        # TODO
         trp = Trp('A', 'B', 'C', 'D', False)
 
         self.assertEqual('A', trp.prefix)
@@ -47,12 +48,14 @@ class TestTrp(unittest.TestCase):
 
     def test_validate_trp_params(self):
         """Валидация параметров"""
+        # TODO
         # префикс
         items = ['', 'a', 'Б', '1a', 'A'*26, '<']
         for item in items:
             with self.subTest(item=item), self.assertRaises(ValueError):
                     Trp(item, 'B')
 
+        # имя
         items = ['', 'a', 'Б', 'A'*26, '<']
         for item in items:
             with self.subTest(item=item), self.assertRaises(ValueError):
@@ -68,23 +71,16 @@ class TestTrp(unittest.TestCase):
         self.assertEqual("$A.B=1.5;", str(Trp('A', 'B', 1.5)))
         # bool
         self.assertEqual('$A.B=True;', str(Trp('A', 'B', True)))
-        # Trp (триплет-ссылка)
+        # Trp (триплет-цель)
         self.assertEqual('$A.B=$C.D;', str(Trp('A', 'B', Trp('C', 'D'))))
-        # TrpStr
-        # TODO
         # TrpExpr
-        # TODO
-
-        # ВСПТД-типы
-        # заявка
-        self.assertEqual('$A.B=:;', str(Trp('A', 'B', ':')))
+        self.assertEqual('$E.F=$A.B*$C.D;', str(Trp('E', 'F', TrpExpr(Trp('A', 'B'), '*', Trp('C', 'D')))))
 
     def test_str(self):
         """Строковое отображение"""
         # TODO
         self.assertEqual('A.B', str(Trp('A', 'B', special=True)))
         self.assertEqual('$A.B', str(Trp('A', 'B')))
-        self.assertEqual('A.B', str(Trp('A', 'B', 'C', special=True)))
         self.assertEqual('$A.B=\'C\';', str(Trp('A', 'B', 'C')))
         self.assertEqual('$A.B=\'C\'"D";', str(Trp('A', 'B', 'C', 'D')))
 
@@ -142,4 +138,3 @@ class TestTrp(unittest.TestCase):
                 self.comment = 'D'
 
         self.assertNotEqual(Trp('A', 'B', 'C', 'D'), MockTrp())
-
