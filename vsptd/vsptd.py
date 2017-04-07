@@ -5,7 +5,7 @@
 """
 
 import re
-# from collections import OrderedDict
+from collections import OrderedDict
 
 from vsptd.support import type_name
 
@@ -98,7 +98,7 @@ class VSPTDSettings:
         elif value is not None:
             _validation(value, self.value, ('Значение', 'значения'))
         elif comment is not None:
-            _validation(comment, self.name, ('Комментарий', 'комментария'))
+            _validation(comment, self.comment, ('Комментарий', 'комментария'))
         else:
             raise ValueError
 
@@ -182,8 +182,8 @@ class Trp:
             >>> print(Trp('A', 'B', Trp('C', 'D')))
             $A.B=$C.D;
 
-        * свойство ``special`` отвечает за "особенность" триплета, что проявляется отсутствием символа начала
-          триплета в строковом представлении, а также дополнительным смыслом в контексте решаемой задачи:
+        * свойство ``special`` отвечает за "особенность" триплета, что проявляется отсутствием символа начала триплета
+          в строковом представлении, а также приобретаемым дополнительным смыслом в контексте решаемой задачи:
 
             >>> print(Trp('A', 'B', special=True))
             A.B
@@ -210,7 +210,6 @@ class Trp:
         Trp(prefix='A', name='B', value='C')
     """
     # TODO нужна ли проверка при различных сочетаниях параметров?
-    # TODO добавить возможность инициализации из генератора?
     #: `Свойство класса.` Настройки конфигурации ВСПТД :class:`VSPTDSettings`; по умолчанию используются стандартные
     settings = VSPTDSettings()
 
@@ -370,21 +369,23 @@ class TrpStr:
     """
     **Триплетная строка**
 
+    .. note::
+        Триплетная строка упорядочена. Новые триплеты добавляются в конец, старые обновляются и сохраняют свои позиции.
+
     :param `*trps`: триплеты :class:`Trp`
     :raises TypeError: если параметры не :class:`Trp`
     :Пример работы:
         >>> TrpStr(Trp('A', 'B', 'C'))
         TrpStr(Trp(prefix='A', name='B', value='C'))
     """
-    # TODO важен порядок триплетов в трипл. строке? - можно использовать OrderedDict
+    # TODO добавить возможность инициализации из генератора?
     __slots__ = ('__trps',)
 
     #: `Свойство класса.` Настройки конфигурации ВСПТД :class:`VSPTDSettings`; по умолчанию используются стандартные
     settings = VSPTDSettings()
 
     def __init__(self, *trps):
-        # self.__trps = OrderedDict()
-        self.__trps = {}
+        self.__trps = OrderedDict()
         for trp in trps:
             # все ли аргументы — триплеты
             if not isinstance(trp, Trp):
@@ -402,16 +403,22 @@ class TrpStr:
         return len(self.__trps)
 
     def __getitem__(self, key):
+        # TODO: добавить доступ по индексу, срезу?
+        # TODO: должна использоваться строгая выборка?
         if isinstance(key, (tuple, list)):
             return self.get(*key)
         elif isinstance(key, str):
             return self.getpr(key)
+        else:
+            raise KeyError('Неверный формат ключа', key)
 
     def __delitem__(self, key):
         if isinstance(key, (tuple, list)):
             self.rem(*key)
         elif isinstance(key, str):
             self.rempr(key)
+        else:
+            raise KeyError('Неверный формат ключа', key)
 
     def __contains__(self, item):
         """
@@ -427,7 +434,6 @@ class TrpStr:
         # префикс
         if isinstance(item, str):
             self.settings.validate(prefix=item)
-
             for trp in self:
                 if trp.prefix == item:
                     return True
@@ -437,13 +443,14 @@ class TrpStr:
             prefix, name = item
             self.settings.validate(prefix=prefix)
             self.settings.validate(name=name)
-
             return hash((prefix, name)) in self.__trps
         else:
             raise TypeError('Должен быть str, tuple, list, не ' + type_name(item), item)
 
     def __eq__(self, other):
-        return isinstance(other, TrpStr) and self.__trps == other.__trps
+        # TODO: оптимизировать сравнение
+        # TODO: учитывать ли при сравнении порядок?
+        return isinstance(other, TrpStr) and dict(self.__trps) == dict(other.__trps)
 
     def __add__(self, other):
         if isinstance(other, Trp):
@@ -512,13 +519,14 @@ class TrpStr:
         except KeyError:
             raise KeyError('По заданным префиксу и имени триплет не найден', (prefix, name))
 
-    def getpr(self, prefix: str):
+    def getpr(self, prefix: str, strict=True):
         """
         Возвращает из триплетной строки триплеты по заданному префиксу
 
         Эквивалентно ``<TrpStr>[prefix]``
 
         :param str prefix: префикс
+        :param bool strict: использовать строгий поиск (не включает префиксы вида E, E1, E2 и т.д.), True по умолчанию
         :rtype: TrpStr
 
         :raises TypeError: если префикс не является ``str``
@@ -530,7 +538,12 @@ class TrpStr:
         self.settings.validate(prefix=prefix)
 
         result = TrpStr()
-        result.__trps.update({_hash: trp for _hash, trp in self.__trps.items() if trp.prefix == prefix})
+        if strict:
+            result.__trps.update({hash_: trp for hash_, trp in self.__trps.items() if trp.prefix == prefix})
+        else:
+            pattern = r'^([A-Z]+)(\d*)$'
+            result.__trps.update({hash_: trp for hash_, trp in self.__trps.items()
+                                  if re.findall(pattern, trp.prefix)[0][0] == prefix})
         if len(result.__trps) == 0:
             raise KeyError('По заданному префиксу триплетов не найдено', prefix)
         return result
@@ -561,33 +574,41 @@ class TrpStr:
         except KeyError:
             raise KeyError('По заданным префиксу и имени триплет не найден', (prefix, name))
 
-    def rempr(self, prefix: str) -> None:
+    def rempr(self, prefix: str, strict=True) -> None:
         """
         Удаляет из триплетной строки все триплеты по заданному префиксу
 
         Эквивалентно ``del <TrpStr>[prefix]``
 
         :param str prefix: префикс
+        :param bool strict: использовать строгий поиск (не включает префиксы вида E, E1, E2 и т.д.), True по умолчанию
 
         :raises TypeError: если префикс не является ``str``
         :raises ValueError: префикс не удовлетворяет соответствующим требованиям
         :raises KeyError: если по заданному префиксу триплетов не найдено
         """
-        # TODO Нужно ли учитывать для функции del_trp_pref триплеты с префиксами вида E, E1, E2?
         if not isinstance(prefix, str):
             raise TypeError('Префикс должен быть str, не ' + type_name(prefix), prefix)
         self.settings.validate(prefix=prefix)
 
         count = len(self.__trps)
-        self.__trps = {_hash: trp for _hash, trp in self.__trps.items() if trp.prefix != prefix}
+        if strict:
+            for hash_ in tuple(hash_ for hash_, trp in self.__trps.items() if trp.prefix == prefix):
+                del self.__trps[hash_]
+        else:
+            pattern = r'^([A-Z]+)(\d*)$'
+            for hash_ in tuple(hash_ for hash_, trp in self.__trps.items()
+                               if re.findall(pattern, trp.prefix)[0][0] == prefix):
+                del self.__trps[hash_]
         if count == len(self.__trps):
             raise KeyError('По заданному префиксу триплетов не найдено', prefix)
 
-    # def sort(self) -> None:
-    #     """
-    #     Сортирует триплетную строку в лексиграфическом порядке по префиксу и имени триплетов
-    #     """
-    #     self._trps = OrderedDict(sorted(self._trps.items(), key=lambda item: item[0]))
+    def sort(self) -> None:
+        """
+        Сортирует триплетную строку в лексиграфическом порядке по префиксу и имени триплетов
+        """
+        # TODO: добавить параметр для функции-сортировки
+        self.__trps = OrderedDict(sorted(self.__trps.items(), key=lambda trp: (trp.prefix, trp.name)))
 
 
 class TrpExpr:
@@ -672,4 +693,5 @@ class TrpExpr:
                 result.append(str(item))
 
         # TODO переписать с использованием модуля operator
+        # TODO: "обезапасить" eval
         return eval(''.join(result))

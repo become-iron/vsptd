@@ -83,28 +83,59 @@ class TestTrpStr(unittest.TestCase):
 
     def test_get(self):
         """Получение триплетов по префиксу или префиксу и имени"""
-        _trp_str = TrpStr(Trp('A', 'B', 'C'), Trp('D', 'E', 'F'), Trp('A', 'R', 'H'))
+        # TODO
+        _trp_str = TrpStr(Trp('A', 'B', 'C'), Trp('A', 'D', 'C'),  Trp('A2', 'D', 'C'), Trp('D', 'E', 'F'))
 
+        # по префиксу и имени
         self.assertEqual(Trp('A', 'B', 'C'), _trp_str.get('A', 'B'))
         self.assertEqual(Trp('A', 'B', 'C'), _trp_str['A', 'B'])
 
-        self.assertCountEqual(TrpStr(Trp('A', 'B', 'C'), Trp('A', 'R', 'H')), _trp_str.getpr('A'))
-        self.assertCountEqual(TrpStr(Trp('A', 'B', 'C'), Trp('A', 'R', 'H')), _trp_str['A'])
+        # по префиксу
+        self.assertCountEqual(TrpStr(Trp('A', 'B', 'C'), Trp('A', 'D', 'C')), _trp_str.getpr('A'))
+        self.assertCountEqual(TrpStr(Trp('A', 'B', 'C'), Trp('A', 'D', 'C')), _trp_str['A'])
 
     def test_del(self):
         """Удаление триплетов по префиксу или префиксу и имени"""
-        _trp_str = TrpStr(Trp('A', 'B', 'C'), Trp('D', 'E', 'F'), Trp('A', 'R', 'H'))
-        self.assertEqual(None, _trp_str.rem('A', 'B'))
-        self.assertCountEqual(TrpStr(Trp('D', 'E', 'F'), Trp('A', 'R', 'H')), _trp_str)
+        # по префиксу и имени
+        _trp_str = TrpStr(Trp('A', 'B', 'C'), Trp('A', 'D', 'C'),  Trp('A2', 'D', 'C'), Trp('D', 'E', 'F'))
+        _trp_str.rem('A', 'B')
+        self.assertCountEqual(TrpStr(Trp('A', 'D', 'C'),  Trp('A2', 'D', 'C'), Trp('D', 'E', 'F')), _trp_str)
 
-        _trp_str = TrpStr(Trp('A', 'B', 'C'), Trp('D', 'E', 'F'), Trp('A', 'R', 'H'))
+        _trp_str = TrpStr(Trp('A', 'B', 'C'), Trp('A', 'D', 'C'),  Trp('A2', 'D', 'C'), Trp('D', 'E', 'F'))
         del _trp_str['A', 'B']
-        self.assertCountEqual(TrpStr(Trp('D', 'E', 'F'), Trp('A', 'R', 'H')), _trp_str)
+        self.assertCountEqual(TrpStr(Trp('A', 'D', 'C'),  Trp('A2', 'D', 'C'), Trp('D', 'E', 'F')), _trp_str)
 
-        _trp_str = TrpStr(Trp('A', 'B', 'C'), Trp('D', 'E', 'F'), Trp('A', 'R', 'H'))
-        self.assertEqual(None, _trp_str.rempr('A'))
-        self.assertCountEqual(TrpStr(Trp('D', 'E', 'F')), _trp_str)
+        # по префиксу
+        _trp_str = TrpStr(Trp('A', 'B', 'C'), Trp('A', 'D', 'C'),  Trp('A2', 'D', 'C'), Trp('D', 'E', 'F'))
+        _trp_str.rempr('A')
+        self.assertCountEqual(TrpStr(Trp('A2', 'D', 'C'), Trp('D', 'E', 'F')), _trp_str)
 
-        _trp_str = TrpStr(Trp('A', 'B', 'C'), Trp('D', 'E', 'F'), Trp('A', 'R', 'H'))
+        _trp_str = TrpStr(Trp('A', 'B', 'C'), Trp('A', 'D', 'C'),  Trp('A2', 'D', 'C'), Trp('D', 'E', 'F'))
         del _trp_str['A']
+        self.assertCountEqual(TrpStr(Trp('A2', 'D', 'C'), Trp('D', 'E', 'F')), _trp_str)
+
+        # нестрогое
+        _trp_str = TrpStr(Trp('A', 'B', 'C'), Trp('A', 'D', 'C'),  Trp('A2', 'D', 'C'), Trp('D', 'E', 'F'))
+        _trp_str.rempr('A', strict=False)
         self.assertCountEqual(TrpStr(Trp('D', 'E', 'F')), _trp_str)
+
+    def test_sort(self):
+        """Сортировка"""
+        _trp_str = TrpStr(Trp('A', 'B', 'C'), Trp('A', 'D', 'C'),  Trp('A2', 'D', 'C'), Trp('D', 'E', 'F'))
+        _trp_str.sort()
+
+    def test_order(self):
+        """Порядок триплетов"""
+        _trp_str = TrpStr(Trp('A', 'B', 'C'), Trp('A', 'D', 'C'))
+        _trp_str2 = TrpStr(Trp('A', 'D', 'C'), Trp('A', 'B', 'C'))
+        self.assertNotEqual(tuple(_trp_str), tuple(_trp_str2))
+
+        # сохранение позиции триплета после обновления
+        _trp_str = TrpStr(Trp('A', 'B', 'C'), Trp('A', 'D', 'C'))
+        _trp_str.add(Trp('A', 'B', 'E'))
+        self.assertEqual(tuple(_trp_str), tuple(TrpStr(Trp('A', 'B', 'E'), Trp('A', 'D', 'C'))))
+
+        # новый триплет добавляется в конец
+        _trp_str = TrpStr(Trp('A', 'B', 'C'), Trp('A', 'D', 'C'))
+        _trp_str.add(Trp('D', 'B', 'E'))
+        self.assertEqual(tuple(_trp_str), tuple(TrpStr(Trp('A', 'B', 'C'), Trp('A', 'D', 'C'), Trp('D', 'B', 'E'))))
