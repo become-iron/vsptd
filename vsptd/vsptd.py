@@ -405,15 +405,14 @@ class TrpStr:
 
     def __bool__(self):
         # приведение к типу bool
-        # если в трипл. строке есть триплете, то True, иначе False
+        # если в трипл. строке есть триплеты, то True, иначе False
         return len(self) > 0
 
     def __getitem__(self, key):
-        # TODO: добавить доступ по индексу, срезу?
-        # TODO: должна использоваться строгая выборка?
         if isinstance(key, (tuple, list)):
             return self.get(*key)
         elif isinstance(key, str):
+            # используется строгая выборка
             return self.getpr(key)
         else:
             raise KeyError('Неверный формат ключа', key)
@@ -480,6 +479,9 @@ class TrpStr:
 
     def __iter__(self):
         yield from self.__trps.values()
+
+    def __reversed__(self):
+        yield from reversed(self.__trps.values())
 
     def add(self, other) -> None:
         """

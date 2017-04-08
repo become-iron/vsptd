@@ -85,9 +85,35 @@ class TestTrpStr(unittest.TestCase):
         self.assertCountEqual([Trp('A', 'B', 'C'), Trp('D', 'E', 'F')], list(_trp_str))
         self.assertCountEqual((Trp('A', 'B', 'C'), Trp('D', 'E', 'F')), tuple(_trp_str))
 
+    def test_reversed(self):
+        """Реверсная итерация"""
+        _trp_str = TrpStr(Trp('A', 'B', 'C'), Trp('A', 'D', 'C'),  Trp('A2', 'D', 'C'), Trp('D', 'E', 'F'))
+        self.assertEqual((Trp('D', 'E', 'F'), Trp('A2', 'D', 'C'), Trp('A', 'D', 'C'), Trp('A', 'B', 'C')),
+                         tuple(reversed(_trp_str)))
+
+    def test_sort(self):
+        """Сортировка"""
+        _trp_str = TrpStr(Trp('A', 'B', 'C'), Trp('A', 'D', 'C'),  Trp('A2', 'D', 'C'), Trp('D', 'E', 'F'))
+        _trp_str.sort()
+
+    def test_order(self):
+        """Порядок триплетов"""
+        _trp_str = TrpStr(Trp('A', 'B', 'C'), Trp('A', 'D', 'C'))
+        _trp_str2 = TrpStr(Trp('A', 'D', 'C'), Trp('A', 'B', 'C'))
+        self.assertNotEqual(tuple(_trp_str), tuple(_trp_str2))
+
+        # сохранение позиции триплета после обновления
+        _trp_str = TrpStr(Trp('A', 'B', 'C'), Trp('A', 'D', 'C'))
+        _trp_str.add(Trp('A', 'B', 'E'))
+        self.assertEqual(tuple(_trp_str), tuple(TrpStr(Trp('A', 'B', 'E'), Trp('A', 'D', 'C'))))
+
+        # новый триплет добавляется в конец
+        _trp_str = TrpStr(Trp('A', 'B', 'C'), Trp('A', 'D', 'C'))
+        _trp_str.add(Trp('D', 'B', 'E'))
+        self.assertEqual(tuple(_trp_str), tuple(TrpStr(Trp('A', 'B', 'C'), Trp('A', 'D', 'C'), Trp('D', 'B', 'E'))))
+
     def test_get(self):
         """Получение триплетов по префиксу или префиксу и имени"""
-        # TODO
         _trp_str = TrpStr(Trp('A', 'B', 'C'), Trp('A', 'D', 'C'),  Trp('A2', 'D', 'C'), Trp('D', 'E', 'F'))
 
         # по префиксу и имени
@@ -122,24 +148,3 @@ class TestTrpStr(unittest.TestCase):
         _trp_str = TrpStr(Trp('A', 'B', 'C'), Trp('A', 'D', 'C'),  Trp('A2', 'D', 'C'), Trp('D', 'E', 'F'))
         _trp_str.rempr('A', strict=False)
         self.assertCountEqual(TrpStr(Trp('D', 'E', 'F')), _trp_str)
-
-    def test_sort(self):
-        """Сортировка"""
-        _trp_str = TrpStr(Trp('A', 'B', 'C'), Trp('A', 'D', 'C'),  Trp('A2', 'D', 'C'), Trp('D', 'E', 'F'))
-        _trp_str.sort()
-
-    def test_order(self):
-        """Порядок триплетов"""
-        _trp_str = TrpStr(Trp('A', 'B', 'C'), Trp('A', 'D', 'C'))
-        _trp_str2 = TrpStr(Trp('A', 'D', 'C'), Trp('A', 'B', 'C'))
-        self.assertNotEqual(tuple(_trp_str), tuple(_trp_str2))
-
-        # сохранение позиции триплета после обновления
-        _trp_str = TrpStr(Trp('A', 'B', 'C'), Trp('A', 'D', 'C'))
-        _trp_str.add(Trp('A', 'B', 'E'))
-        self.assertEqual(tuple(_trp_str), tuple(TrpStr(Trp('A', 'B', 'E'), Trp('A', 'D', 'C'))))
-
-        # новый триплет добавляется в конец
-        _trp_str = TrpStr(Trp('A', 'B', 'C'), Trp('A', 'D', 'C'))
-        _trp_str.add(Trp('D', 'B', 'E'))
-        self.assertEqual(tuple(_trp_str), tuple(TrpStr(Trp('A', 'B', 'C'), Trp('A', 'D', 'C'), Trp('D', 'B', 'E'))))
