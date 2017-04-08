@@ -453,9 +453,15 @@ class TrpStr:
             raise TypeError('Должен быть str, tuple, list, не ' + type_name(item), item)
 
     def __eq__(self, other):
-        # TODO: оптимизировать сравнение
-        # TODO: учитывать ли при сравнении порядок?
-        return isinstance(other, TrpStr) and dict(self.__trps) == dict(other.__trps)
+        # TODO: провести тесты на скорость работы
+        if isinstance(other, TrpStr) and len(self) == len(other):
+            for hash_, trp in self.__trps.items():
+                if trp != other.__trps.get(hash_):
+                    return False
+        else:
+            return False
+        return True
+        # return isinstance(other, TrpStr) and dict(self.__trps) == dict(other.__trps)
 
     def __add__(self, other):
         if isinstance(other, Trp):
