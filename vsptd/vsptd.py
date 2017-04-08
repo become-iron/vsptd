@@ -192,7 +192,7 @@ class Trp:
     :param name: имя триплета
     :type name: str, необяз.
     :param value: значение триплета; None по умолчанию
-    :type value: str, int, float, bool, Trp, TrpExpr, необяз.
+    :type value: str, int, float, Trp, TrpExpr, необяз.
     :param comment: комментарий; пустая строка по умолчанию
     :type comment: str, необяз.
     :param bid: заявка
@@ -261,9 +261,10 @@ class Trp:
         elif isinstance(value, Trp):
             if value.value is not None:
                 raise ValueError('В качестве значения можно использовать только триплет-цель', value)
-        elif not isinstance(value, (int, float, bool, TrpExpr)) and value is not None:
+        # TODO: оптимизировать проверку на bool
+        elif (not isinstance(value, (int, float, TrpExpr)) or isinstance(value, bool)) and value is not None:
             raise TypeError(
-                'Значение должно быть str, int, float, bool, Trp, TrpExpr, не ' + type_name(value),
+                'Значение должно быть str, int, float, Trp, TrpExpr, не ' + type_name(value),
                 value
             )
         self.__value = value

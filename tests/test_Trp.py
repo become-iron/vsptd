@@ -27,6 +27,23 @@ class TestTrp(unittest.TestCase):
         with self.assertRaises(TypeError):
             Trp('A', 'B', 'C', special=0)
 
+    def test_str_with_different_types_of_trp_value(self):
+        """Различные типы значения триплета"""
+        # str
+        self.assertEqual("$A.B='C';", str(Trp('A', 'B', 'C')))
+        # int
+        self.assertEqual("$A.B=0;", str(Trp('A', 'B', 0)))
+        # float
+        self.assertEqual("$A.B=1.5;", str(Trp('A', 'B', 1.5)))
+        # Trp (триплет-цель)
+        self.assertEqual('$A.B=$C.D;', str(Trp('A', 'B', Trp('C', 'D'))))
+        # TrpExpr
+        self.assertEqual('$E.F=$A.B*$C.D;', str(Trp('E', 'F', TrpExpr(Trp('A', 'B'), '*', Trp('C', 'D')))))
+
+        # bool
+        with self.assertRaises(TypeError):
+            Trp('A', 'B', True)
+
     def test_attribute_access(self):
         """Доступ к параметрам"""
         # TODO
@@ -60,21 +77,6 @@ class TestTrp(unittest.TestCase):
         for item in items:
             with self.subTest(item=item), self.assertRaises(ValueError):
                     Trp('A', item)
-
-    def test_str_with_different_types_of_trp_value(self):
-        """Различные типы значения триплета"""
-        # str
-        self.assertEqual("$A.B='C';", str(Trp('A', 'B', 'C')))
-        # int
-        self.assertEqual("$A.B=0;", str(Trp('A', 'B', 0)))
-        # float
-        self.assertEqual("$A.B=1.5;", str(Trp('A', 'B', 1.5)))
-        # bool
-        self.assertEqual('$A.B=True;', str(Trp('A', 'B', True)))
-        # Trp (триплет-цель)
-        self.assertEqual('$A.B=$C.D;', str(Trp('A', 'B', Trp('C', 'D'))))
-        # TrpExpr
-        self.assertEqual('$E.F=$A.B*$C.D;', str(Trp('E', 'F', TrpExpr(Trp('A', 'B'), '*', Trp('C', 'D')))))
 
     def test_str(self):
         """Строковое отображение"""
