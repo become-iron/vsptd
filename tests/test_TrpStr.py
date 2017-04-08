@@ -55,6 +55,10 @@ class TestTrpStr(unittest.TestCase):
         self.assertEqual(None, _trp_str.add(_trp))
         self.assertCountEqual(_trp_str4, _trp_str)
 
+    def test_bool(self):
+        self.assertEqual(False, bool(TrpStr()))
+        self.assertEqual(True, bool(TrpStr(Trp('A', 'B', 'C'))))
+
     def test_equal(self):
         # WARN может поменяться поведение, если трипл. строка станет упорядоченной
         _trp_str = TrpStr(Trp('A', 'B', 'C'), Trp('D', 'E', 'F'))

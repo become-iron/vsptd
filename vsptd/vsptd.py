@@ -402,6 +402,11 @@ class TrpStr:
     def __len__(self):
         return len(self.__trps)
 
+    def __bool__(self):
+        # приведение к типу bool
+        # если в трипл. строке есть триплете, то True, иначе False
+        return len(self) > 0
+
     def __getitem__(self, key):
         # TODO: добавить доступ по индексу, срезу?
         # TODO: должна использоваться строгая выборка?
