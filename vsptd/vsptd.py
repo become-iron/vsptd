@@ -619,7 +619,7 @@ class TrpStr:
         Сортирует триплетную строку в лексиграфическом порядке по префиксу и имени триплетов
         """
         # TODO: добавить параметр для функции-сортировки
-        self.__trps = OrderedDict(sorted(self.__trps.items(), key=lambda trp: (trp.prefix, trp.name)))
+        self.__trps = OrderedDict(sorted(self.__trps.items(), key=lambda item: (item[1].prefix, item[1].name)))
 
 
 class TrpExpr:
