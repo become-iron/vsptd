@@ -274,7 +274,7 @@ class Trp:
                 result += trp_str_isltr + self.value + trp_str_isltr
             else:
                 result += str(self.value)
-        if self.comment is not None:
+        if self.comment is not None and self.comment != '':
             result += trp_comment_isltr + self.comment + trp_comment_isltr
         result += trp_end
         return result
