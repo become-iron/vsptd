@@ -102,70 +102,6 @@ class VSPTDSettings:
         else:
             raise ValueError
 
-    # def validate_prefix(self, prefix: str) -> None:
-    #     """
-    #     Проверяет корректность префикса триплета
-    #
-    #     :param str prefix: префикс
-    #     :raises ValueError: префикс несоответствующей длины
-    #     :raises ValueError: префикс не удовлетворяет соответствующему формату
-    #     """
-    #     min_len, max_len, regexp = self.prefix.min, self.prefix.max, self.prefix.regexp
-    #     if not (min_len <= len(prefix) <= max_len):
-    #         raise ValueError(
-    #             'Длина префикса должна быть от {} до {}, не {}'.format(min_len, max_len, len(prefix)), prefix
-    #         )
-    #     elif re.fullmatch(regexp, prefix) is None:
-    #         raise ValueError('Префикс не удовлетворяет соответствующим требованиям', prefix)
-    #
-    # def validate_name(self, name: str) -> None:
-    #     """
-    #     Проверяет корректность имени триплета
-    #
-    #     :param str name: имя
-    #     :raises ValueError: имя несоответствующей длины
-    #     :raises ValueError: имя не удовлетворяет соответствующему формату
-    #     """
-    #     min_len, max_len, regexp = self.name.min, self.name.max, self.name.regexp
-    #     if not (min_len <= len(name) <= max_len):
-    #         raise ValueError(
-    #             'Длина имени должна быть от {} до {}, не {}'.format(min_len, max_len, len(name)), name
-    #         )
-    #     elif re.fullmatch(regexp, name) is None:
-    #         raise ValueError('Имя не удовлетворяет соответствующим требованиям', name)
-    #
-    # def validate_value(self, value_str) -> None:
-    #     """
-    #     Проверяет корректность значения-строки триплета
-    #
-    #     :param str value_str: значение-строка
-    #     :raises ValueError: значение несоответствующей длины
-    #     :raises ValueError: значение не удовлетворяет соответствующему формату
-    #     """
-    #     min_len, max_len, regexp = self.value.min, self.value.max, self.value.regexp
-    #     if not (min_len <= len(value_str) <= max_len):
-    #         raise ValueError(
-    #             'Длина значения должна быть от {} до {}, не {}'.format(min_len, max_len, len(value_str)), value_str
-    #         )
-    #     elif re.fullmatch(regexp, value_str) is None:
-    #         raise ValueError('Значение не удовлетворяет соответствующим требованиям', value_str)
-    #
-    # def validate_comment(self, comment) -> None:
-    #     """
-    #     Проверяет корректность комментария триплета
-    #
-    #     :param str comment: комментарий
-    #     :raises ValueError: комментарий несоответствующей длины
-    #     :raises ValueError: комментарий не удовлетворяет соответствующему формату
-    #     """
-    #     min_len, max_len, regexp = self.comment.min, self.comment.max, self.comment.regexp
-    #     if not (min_len <= len(comment) <= max_len):
-    #         raise ValueError(
-    #             'Длина комментария должна быть от {} до {}, не {}'.format(min_len, max_len, len(comment)), comment
-    #         )
-    #     elif re.fullmatch(regexp, comment) is None:
-    #         raise ValueError('Комментарий не удовлетворяет соответствующим требованиям', comment)
-
 
 class Trp:
     """
@@ -419,6 +355,14 @@ class TrpStr:
         elif isinstance(key, str):
             # используется строгая выборка
             return self.getpr(key)
+        # elif isinstance(key, int):
+        #     # только положительные индексы
+        #     _ = tuple(trp for i, trp in enumerate(self) if i == key)
+        #     if _:
+        #         return _[0]
+        #     raise IndexError
+        # elif isinstance(key, slice):
+        #     return TrpStr(tuple(self)[slice])
         else:
             raise KeyError('Неверный формат ключа', key)
 
@@ -707,5 +651,4 @@ class TrpExpr:
                 result.append(str(item))
 
         # TODO переписать с использованием модуля operator
-        # TODO: "обезапасить" eval
-        return eval(''.join(result))
+        return eval(''.join(result), {'__builtins__': {}})
