@@ -140,3 +140,10 @@ class TestTrp(unittest.TestCase):
                 self.comment = 'D'
 
         self.assertNotEqual(Trp('A', 'B', 'C', 'D'), MockTrp())
+
+        self.assertNotEqual(Trp('A', 'B', 'C'), Trp('A', 'B', 'C', 'D'))
+        self.assertNotEqual(Trp('A', 'B', 'C'), Trp('A', 'B', 'C', bid=True))
+        self.assertNotEqual(Trp('A', 'B', 'C'), Trp('A', 'B', 'C', special=True))
+
+        # сравнение с трипл. строкой, содержащей один триплет
+        # self.assertEqual(Trp('A', 'B', 'C'), TrpStr(Trp('A', 'B', 'C')))

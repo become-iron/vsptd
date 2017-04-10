@@ -359,11 +359,16 @@ class Trp:
         return result
 
     def __eq__(self, other):
-        # TODO проверять ли и комментарий, special, bid?
+        # учитывается также комментарий, special, bid
         return isinstance(other, Trp) and \
-               self.prefix == other.prefix and \
-               self.name == other.name and \
-               self.value == other.value
+                self.prefix == other.prefix and \
+                self.name == other.name and \
+                self.value == other.value and \
+                self.comment == other.comment and \
+                self.bid == other.bid and \
+                self.special == other.special
+        # or (isinstance(other, TrpStr) and len(other) == 1 and self == tuple(other)[0])
+        # сравнение с трипл. строкой, содержащей один триплет
 
 
 class TrpStr:
@@ -621,7 +626,6 @@ class TrpStr:
         """
         Сортирует триплетную строку в лексиграфическом порядке по префиксу и имени триплетов
         """
-        # TODO: добавить параметр для функции-сортировки
         self.__trps = OrderedDict(sorted(self.__trps.items(), key=lambda item: (item[1].prefix, item[1].name)))
 
 
