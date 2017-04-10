@@ -60,14 +60,16 @@ class TestTrpStr(unittest.TestCase):
         self.assertEqual(True, bool(TrpStr(Trp('A', 'B', 'C'))))
 
     def test_equal(self):
-        # WARN может поменяться поведение, если трипл. строка станет упорядоченной
         _trp_str = TrpStr(Trp('A', 'B', 'C'), Trp('D', 'E', 'F'))
         _trp_str2 = TrpStr(Trp('J', 'K', 'L'), Trp('M', 'N', 'O'))
         _trp = Trp('J', 'K', 'L')
 
         self.assertEqual(_trp_str + _trp, _trp + _trp_str)
-
         self.assertEqual(_trp_str + _trp_str2, _trp_str2 + _trp_str)
+        self.assertNotEqual(TrpStr(Trp('A', 'B', 'C'), Trp('D', 'E', 'F')),
+                            TrpStr(Trp('A', 'B', 'C'), Trp('D', 'E', 'F'), Trp('J', 'K', 'L')))
+        self.assertNotEqual(TrpStr(Trp('A', 'B', 'C'), Trp('D', 'E', 'F'), Trp('J', 'K', 'L')),
+                            TrpStr(Trp('A', 'B', 'C'), Trp('D', 'E', 'F')))
 
     def test_contains(self):
         """Наличие триплета в триплетной строке"""

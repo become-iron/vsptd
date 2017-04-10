@@ -459,13 +459,9 @@ class TrpStr:
 
     def __eq__(self, other):
         # TODO: провести тесты на скорость работы
-        if isinstance(other, TrpStr) and len(self) == len(other):
-            for hash_, trp in self.__trps.items():
-                if trp != other.__trps.get(hash_):
-                    return False
-        else:
-            return False
-        return True
+        return isinstance(other, TrpStr) and \
+               len(self) == len(other) and \
+               all(trp == other.__trps.get(hash_) for hash_, trp in self.__trps.items())
         # return isinstance(other, TrpStr) and dict(self.__trps) == dict(other.__trps)
 
     def __add__(self, other):
