@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-# import sys
-# sys.path.append('../')
 import unittest
 
 from vsptd.vsptd import Trp, TrpStr, TrpExpr
@@ -67,13 +65,13 @@ class TestTrp(unittest.TestCase):
         """Валидация параметров"""
         # TODO
         # префикс
-        items = ['', 'a', 'Б', '1a', 'A'*26, '<']
+        items = ['', 'a', 'Б', '1a', 'A'*50, '<']
         for item in items:
             with self.subTest(item=item), self.assertRaises(ValueError):
                     Trp(item, 'B')
 
         # имя
-        items = ['', 'a', 'Б', 'A'*26, '<']
+        items = ['', 'a', 'Б', 'A'*50, '<']
         for item in items:
             with self.subTest(item=item), self.assertRaises(ValueError):
                     Trp('A', item)
@@ -85,6 +83,7 @@ class TestTrp(unittest.TestCase):
         self.assertEqual('$A.B', str(Trp('A', 'B')))
         self.assertEqual('$A.B=\'C\';', str(Trp('A', 'B', 'C')))
         self.assertEqual('$A.B=\'C\'"D";', str(Trp('A', 'B', 'C', 'D')))
+        self.assertEqual('$A.B=\'C\';', str(Trp('A', 'B', 'C', '')))  # пустой комментарий
 
     def test_repr(self):
         """repr"""

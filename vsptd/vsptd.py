@@ -17,18 +17,17 @@ class VSPTDSettings:
     **Хранение настроек параметров ВСПТД-объектов и правил валидации строковых значений**
 
     .. note::
-        Правила валидации значений представлены в виде регулярных выражений (RegExp).
+        * Правила валидации значений представлены в виде регулярных выражений (RegExp).
+        * Подразумевается, что типы данных для параметров триплета не будут изменяться.
 
     :Пример работы:
         >>> my_settings = VSPTDSettings()
-        >>> my_settings.prefix.min = 5
-        >>> my_settings.prefix.max = 100
-        >>> my_settings.prefix.regexp = '.*'
+        >>> my_settings.prefix_min = 5
+        >>> my_settings.prefix_max = 100
+        >>> my_settings.prefix_regexp = '.*'
         >>> my_settings.trp_start = '~'
         >>> Trp.settings = my_settings  # применение настроек к классу триплета
     """
-    # TODO добавить экспорт/импорт настроек в формате JSON?
-    # TODO добавить ли и валидацию по типам?
     bid = ':'  #: Заявка. См. описание ВСПТД
 
     trp_start = '$'  #: Начало триплета
@@ -42,65 +41,106 @@ class VSPTDSettings:
 
     trp_expr_items_sprtr = ''  #: Разделитель операторов и операндов в триплетном выражении :class:`TrpExp`
 
-    # для удобного доступа к настройкам параметров триплетов
-    class __TrpSettings:
-        def __init__(self, min_len: int, max_len: int, regexp: str):
-            self.min = min_len  #: Минимальная длина параметра
-            self.max = max_len  #: Максимальная длина параметра
-            self.regexp = re.compile(regexp)  #: RegExp для проверки параметра триплета
-            # self.types = types  #: Разрешённые типы параметра
+    prefix_min = 1  #: Мин. длина префикса триплета
+    prefix_max = 32  #: Макс. длина префикса триплета
+    prefix_regexp = r'[A-Z]+\d*'  #: Формат префикса триплета (RegExp)
+    prefix_types = (str,)  #: Типы данных префикса триплета
 
-        def __repr__(self):
-            return '<TrpSettings(min={!r}, max={!r}, regexp={!r})>'.format(self.min, self.max, self.regexp.pattern)
+    name_min = 1  #: Мин. длина имени триплета
+    name_max = 32  #: Макс. длина имени триплета
+    name_regexp = r'[A-Z]+'  #: Формат имени триплета (RegExp)
+    name_types = (str,)  #: Типы данных имени триплета
 
-    #: Настройки префикса триплета
-    prefix = __TrpSettings(1, 25, r'[A-Z]+\d*')
-    #: Настройки имени триплета
-    name = __TrpSettings(1, 25, r'[A-Z]+')
-    # r'[\wА-Яа-яЁё ()-.:?–—−]*'
-    #: Настройки значения-строки триплета
-    value = __TrpSettings(0, 200, r'.*')
-    #: Настройки комментария триплета
-    comment = __TrpSettings(0, 200, r'.*')
+    value_str_min = 0  #: Мин. длина значения-строки триплета
+    value_str_max = 256  #: Макс. длина значения-строки триплета
+    value_str_regexp = None  #: Формат значения-строки триплета (RegExp)
+    # реальное значение для типов устанавливается в конце скрипта
+    value_types = None  #: Типы данных значения триплета
+
+    comment_min = 0  #: Мин. длина комментария триплета
+    comment_max = 256  #: Макс. длина комментария триплета
+    comment_regexp = None  #: Формат комментария триплета (RegExp)
+    comment_types = (str,)  #: Типы данных комментария триплета
 
     def __repr__(self):
         return '<{}>'.format(VSPTDSettings.__name__)
 
-    def validate(self, prefix=None, name=None, value=None, comment=None):
+    def validate(self, prefix=None, name=None, value=None, comment=None) -> None:
         """
-        Проверяет корректность параметра триплета
+        Проверяет корректность параметра триплета. В случае ошибки вызывает исключение
 
-        :param prefix:
-        :param name:
-        :param value:
-        :param comment:
-        :return:
+        .. note:: Проверить можно лишь один параметр за раз. Необходимо всегда указывать имя параметра функции.
+
+        :param prefix: префикс триплета
+        :param name: имя триплета
+        :param value: значение триплета
+        :param comment: комментарий триплета
         """
-        def _validation(trp_param, settings, param_name):
-            msg_err_len = 'Длина {} должна быть от {} до {}, не {}'
-            msg_err_regexp = '{} не удовлетворяет соответствующему формату'
-
-            if not (settings.min <= len(trp_param) <= settings.max):
-                raise ValueError(
-                    msg_err_len.format(param_name[1], settings.min, settings.max, len(trp_param)),
-                    trp_param
-                )
-            if re.fullmatch(settings.regexp, trp_param) is None:
-                raise ValueError(
-                    msg_err_regexp.format(param_name[0]),
-                    trp_param
-                )
-
         if prefix is not None:
-            _validation(prefix, self.prefix, ('Префикс', 'префикса'))
+            trp_param, min_, max_, regexp, types, param_name = \
+                prefix, self.prefix_min, self.prefix_max, self.prefix_regexp, self.prefix_types, 'префикса'
         elif name is not None:
-            _validation(name, self.name, ('Имя', 'имени'))
+            trp_param, min_, max_, regexp, types, param_name = \
+                name, self.name_min, self.name_max, self.name_regexp, self.name_types, 'имени'
         elif value is not None:
-            _validation(value, self.value, ('Значение', 'значения'))
+            trp_param, min_, max_, regexp, types, param_name = \
+                value, self.value_str_min, self.value_str_max, self.value_str_regexp, self.value_types, 'значения'
         elif comment is not None:
-            _validation(comment, self.comment, ('Комментарий', 'комментария'))
+            trp_param, min_, max_, regexp, types, param_name = \
+                comment, self.comment_min, self.comment_max, self.comment_regexp, self.comment_types, 'комментария'
         else:
-            raise ValueError
+            # эта ветка нужна, так как параметры триплета могут принимать значение None,
+            # отсюда есть возможность валидация параметров без предварительной проверки на None
+            return
+
+        msg_err_type = 'Типом {0} может быть {1}, не {2}'
+        msg_err_len = 'Длина {0} должна быть от {1} до {2}, не {3}'
+        msg_err_regexp = 'Формат {0} некорректен'
+
+        if not isinstance(trp_param, types):
+            raise TypeError(
+                msg_err_type.format(param_name, types, type_name(trp_param)),
+                trp_param
+            )
+        if not isinstance(trp_param, str):
+            # прекратить проверку, если объект не является строкой
+            return
+
+        if not (min_ <= len(trp_param) <= max_):
+            raise ValueError(
+                msg_err_len.format(param_name, min_, max_, len(trp_param)),
+                trp_param
+            )
+        if (isinstance(regexp, str) or hasattr(regexp, 'pattern')) and re.fullmatch(regexp, trp_param) is None:
+            raise ValueError(
+                msg_err_regexp.format(param_name),
+                trp_param
+            )
+
+    def to_dict(self) -> dict:
+        """
+        Возвращает настройки ВСПТД в виде словаря
+        """
+        # TODO: возможно, стоит представлять типы в виде строк
+        # берём нужные свойства класса
+        result = {
+            attr: value
+            for attr, value in VSPTDSettings.__dict__.items()
+            if not attr.startswith('_') and not callable(value)
+        }
+        # берём свойства экземпляра класса
+        result.update(self.__dict__)
+        return result
+
+    def from_dict(self, settings: dict) -> None:
+        """
+        Обновляет настройки ВСПТД из переданных в словаре
+
+        .. warning:: Валидация настроек не проводится.
+
+        :param dict settings: настройки
+        """
+        self.__dict__.update(settings)
 
 
 class Trp:
@@ -145,24 +185,16 @@ class Trp:
         >>> Trp('A', 'B', 'C')
         Trp(prefix='A', name='B', value='C')
     """
-    # TODO нужна ли проверка при различных сочетаниях параметров?
     #: `Свойство класса.` Настройки конфигурации ВСПТД :class:`VSPTDSettings`; по умолчанию используются стандартные
     settings = VSPTDSettings()
 
     __slots__ = ('__prefix', '__name', '__value', '__comment', '__bid', '__special')
 
     def __init__(self, prefix: str, name=None, value=None, comment=None, bid=False, special=False):
-        if isinstance(prefix, str):
-            self.settings.validate(prefix=prefix)
-            self.__prefix = prefix
-        else:
-            raise TypeError('Префикс должен быть str, не ' + type_name(prefix), prefix)
-
-        if isinstance(name, str):
-            self.settings.validate(name=name)
-            self.__name = name
-        elif name is not None:
-            raise TypeError('Имя должно быть str, не ' + type_name(name), name)
+        self.settings.validate(prefix=prefix)
+        self.__prefix = prefix
+        self.settings.validate(name=name)
+        self.__name = name
 
         # установка свойств value, comment, special, bind выполняется
         # таким образом с целью их валидации через setter'ы
@@ -192,17 +224,17 @@ class Trp:
 
     @value.setter
     def value(self, value):
-        if isinstance(value, str):
-            self.settings.validate(value=value)
-        elif isinstance(value, Trp):
+        if isinstance(value, Trp):
             if value.value is not None:
                 raise ValueError('В качестве значения можно использовать только триплет-цель', value)
-        # TODO: оптимизировать проверку на bool
-        elif (not isinstance(value, (int, float, TrpExpr)) or isinstance(value, bool)) and value is not None:
+        elif isinstance(value, bool):
+            # TODO: необходимый костыль, т.к. bool наследуется от int
             raise TypeError(
                 'Значение должно быть str, int, float, Trp, TrpExpr, не ' + type_name(value),
                 value
             )
+        else:
+            self.settings.validate(value=value)
         self.__value = value
 
     @property
@@ -212,10 +244,7 @@ class Trp:
 
     @comment.setter
     def comment(self, value):
-        if isinstance(value, str):
-            self.settings.validate(value=value)
-        elif value is not None:
-            raise TypeError('Комментарий должен быть str, не ' + type_name(value), value)
+        self.settings.validate(comment=value)
         self.__comment = value
 
     @property
@@ -320,7 +349,6 @@ class TrpStr:
         >>> TrpStr(Trp('A', 'B', 'C'))
         TrpStr(Trp(prefix='A', name='B', value='C'))
     """
-    # TODO добавить возможность инициализации из генератора?
     __slots__ = ('__trps',)
 
     #: `Свойство класса.` Настройки конфигурации ВСПТД :class:`VSPTDSettings`; по умолчанию используются стандартные
@@ -328,11 +356,12 @@ class TrpStr:
 
     def __init__(self, *trps):
         self.__trps = OrderedDict()
+        # WARN: два прохода по списку триплетов, но позволяет не создавать механизм транзакций
+        # проверка, все ли аргументы — триплеты
         for trp in trps:
-            # все ли аргументы — триплеты
             if not isinstance(trp, Trp):
                 raise TypeError('Должен быть Trp, не ' + type_name(trp), trp)
-            self.__trps.update({hash((trp.prefix, trp.name)): trp})
+        self.__trps.update({hash((trp.prefix, trp.name)): trp for trp in trps})
 
     def __str__(self):
         trps_sprtr = self.settings.trps_sprtr
@@ -402,11 +431,9 @@ class TrpStr:
             raise TypeError('Должен быть str, tuple, list, не ' + type_name(item), item)
 
     def __eq__(self, other):
-        # TODO: провести тесты на скорость работы
         return isinstance(other, TrpStr) and \
                len(self) == len(other) and \
                all(trp == other.__trps.get(hash_) for hash_, trp in self.__trps.items())
-        # return isinstance(other, TrpStr) and dict(self.__trps) == dict(other.__trps)
 
     def __add__(self, other):
         if isinstance(other, Trp):
@@ -465,13 +492,8 @@ class TrpStr:
         :raises ValueError: если префикс/имя не удовлетворяет соответствующим требованиям
         :raises KeyError: если по заданным префиксу и имени триплет не найден
         """
-        if not isinstance(prefix, str):
-            raise TypeError('Префикс должен быть str, не ' + type_name(prefix), prefix)
         self.settings.validate(prefix=prefix)
-        if isinstance(name, str):
-            self.settings.validate(name=name)
-        elif name is not None:
-            raise TypeError('Имя должно быть str, не ' + type_name(name), name)
+        self.settings.validate(name=name)
 
         try:
             return self.__trps[hash((prefix, name))]
@@ -492,8 +514,6 @@ class TrpStr:
         :raises ValueError: префикс не удовлетворяет соответствующим требованиям
         :raises KeyError: если по заданному префиксу триплетов не найдено
         """
-        if not isinstance(prefix, str):
-            raise TypeError('Префикс должен быть str, не ' + type_name(prefix), prefix)
         self.settings.validate(prefix=prefix)
 
         result = TrpStr()
@@ -520,13 +540,8 @@ class TrpStr:
         :raises ValueError: если префикс/имя не удовлетворяет соответствующим требованиям
         :raises KeyError: если по заданным префиксу и имени триплет не найден
         """
-        if not isinstance(prefix, str):
-            raise TypeError('Префикс должен быть str, не ' + type_name(prefix), prefix)
         self.settings.validate(prefix=prefix)
-        if isinstance(name, str):
-            self.settings.validate(name=name)
-        elif name is not None:
-            raise TypeError('Имя должно быть str, не ' + type_name(name), name)
+        self.settings.validate(name=name)
 
         try:
             del self.__trps[hash((prefix, name))]
@@ -546,8 +561,6 @@ class TrpStr:
         :raises ValueError: префикс не удовлетворяет соответствующим требованиям
         :raises KeyError: если по заданному префиксу триплетов не найдено
         """
-        if not isinstance(prefix, str):
-            raise TypeError('Префикс должен быть str, не ' + type_name(prefix), prefix)
         self.settings.validate(prefix=prefix)
 
         count = len(self.__trps)
@@ -555,7 +568,7 @@ class TrpStr:
             for hash_ in tuple(hash_ for hash_, trp in self.__trps.items() if trp.prefix == prefix):
                 del self.__trps[hash_]
         else:
-            pattern = r'^([A-Z]+)(\d*)$'
+            pattern = r'^([A-Z]+)(\d*)$'  # паттерн для префикса; WARN: опасно, если изменится вид префикса
             for hash_ in tuple(hash_ for hash_, trp in self.__trps.items()
                                if re.findall(pattern, trp.prefix)[0][0] == prefix):
                 del self.__trps[hash_]
@@ -652,3 +665,7 @@ class TrpExpr:
 
         # TODO переписать с использованием модуля operator
         return eval(''.join(result), {'__builtins__': {}})
+
+# настройка валидации значения триплетов
+# сделано следующим образом, так как классы Trp и TrpExpr объявляются после объявления VSPTDSettings
+VSPTDSettings.value_types = (str, int, float, Trp, TrpExpr)
