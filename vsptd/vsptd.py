@@ -594,7 +594,7 @@ class TrpExpr:
     :type `*items`: str, int, float, bool, Trp
 
     :raises ValueError: если триплет не является триплетом-целью
-    :raises TypeError: если элемент не str, int, float, bool или Trp
+    :raises TypeError: если элемент не str, int, float, bool, Trp, TrpExpr
 
     :Пример работы:
         >>> expr = TrpExpr(Trp('A', 'B'), '*', Trp('C', 'D'))
@@ -613,9 +613,9 @@ class TrpExpr:
             if isinstance(item, Trp):
                 if item.value is not None:
                     raise ValueError('Триплет должен быть триплетом-целью', item)
-            elif not isinstance(item, (str, int, float, bool)):
+            elif not isinstance(item, (str, int, float, TrpExpr)) or isinstance(item, bool):
                 raise TypeError(
-                    'Элемент должен быть str, int, float, bool, Trp, не ' + type_name(item),
+                    'Элемент должен быть str, int, float, Trp, TrpExpr, не ' + type_name(item),
                     item
                 )
         self.items = items  #: Операнды и операторы в триплетном выражении
@@ -627,7 +627,7 @@ class TrpExpr:
     def __repr__(self):
         return 'TrpExpr({})'.format(', '.join(repr(item) for item in self.items))
 
-    def compute(self, source=None, special_source=None):
+    def calculate(self, source=None, special_source=None):
         """
         Вычисляет выражение
 
@@ -646,7 +646,7 @@ class TrpExpr:
         :Пример работы:
             >>> expr = TrpExpr(Trp('A', 'B'), '*', Trp('C', 'D'))
             >>> trp_str = TrpStr(Trp('A', 'B', 21), Trp('C', 'D', 2))
-            >>> expr.compute(trp_str)
+            >>> expr.calculate(trp_str)
             42
         """
         result = []
@@ -659,7 +659,7 @@ class TrpExpr:
                     value = source.get(item.prefix, item.name).value
                     result.append(str(value))
             elif isinstance(item, TrpExpr):
-                result.append(str(item.compute()))
+                result.append(str(item.calculate(source, special_source)))
             else:
                 result.append(str(item))
 
