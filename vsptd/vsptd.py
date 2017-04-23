@@ -379,27 +379,51 @@ class TrpStr:
         return len(self) > 0
 
     def __getitem__(self, key):
+        # триплет по префиксу и имени
         if isinstance(key, (tuple, list)):
             return self.get(*key)
+        # трипл. строка по префиксу
         elif isinstance(key, str):
             # используется строгая выборка
             return self.getpr(key)
+        # триплет по индексу
+        elif isinstance(key, int):
+            # WARN: неоптимально, исправить
+            return tuple(self)[key]
         # elif isinstance(key, int):
         #     # только положительные индексы
+        #     for i, trp in enumerate(self):
         #     _ = tuple(trp for i, trp in enumerate(self) if i == key)
         #     if _:
         #         return _[0]
         #     raise IndexError
-        # elif isinstance(key, slice):
-        #     return TrpStr(tuple(self)[slice])
+        # трипл. строка по срезу
+        elif isinstance(key, slice):
+            # WARN: неоптимально, исправить
+            return TrpStr(*tuple(self)[key])
         else:
             raise KeyError('Неверный формат ключа', key)
 
     def __delitem__(self, key):
+        # триплет по префиксу и имени
         if isinstance(key, (tuple, list)):
             self.rem(*key)
+        # триплеты по префиксу
         elif isinstance(key, str):
             self.rempr(key)
+        # триплет по индексу
+        elif isinstance(key, int):
+            # WARN, TODO: только для положительных индексов
+            if key < 0:  # TEMP
+                raise IndexError
+            for i, hash_ in enumerate(self.__trps):
+                if i == key:
+                    del self.__trps[hash_]
+                    return
+                elif i > key:
+                    break
+            raise IndexError
+        # TODO: добавить по срезу
         else:
             raise KeyError('Неверный формат ключа', key)
 

@@ -56,10 +56,12 @@ class TestTrpStr(unittest.TestCase):
         self.assertCountEqual(_trp_str4, _trp_str)
 
     def test_bool(self):
+        """Приведение к bool"""
         self.assertEqual(False, bool(TrpStr()))
         self.assertEqual(True, bool(TrpStr(Trp('A', 'B', 'C'))))
 
     def test_equal(self):
+        """Проверка на равенство"""
         _trp_str = TrpStr(Trp('A', 'B', 'C'), Trp('D', 'E', 'F'))
         _trp_str2 = TrpStr(Trp('J', 'K', 'L'), Trp('M', 'N', 'O'))
         _trp = Trp('J', 'K', 'L')
@@ -115,7 +117,7 @@ class TestTrpStr(unittest.TestCase):
         self.assertEqual(tuple(_trp_str), tuple(TrpStr(Trp('A', 'B', 'C'), Trp('A', 'D', 'C'), Trp('D', 'B', 'E'))))
 
     def test_get(self):
-        """Получение триплетов по префиксу или префиксу и имени"""
+        """Получение триплетов по префиксу, или префиксу и имени, или по индексу, или по срезу"""
         _trp_str = TrpStr(Trp('A', 'B', 'C'), Trp('A', 'D', 'C'),  Trp('A2', 'D', 'C'), Trp('D', 'E', 'F'))
 
         # по префиксу и имени
@@ -126,8 +128,16 @@ class TestTrpStr(unittest.TestCase):
         self.assertCountEqual(TrpStr(Trp('A', 'B', 'C'), Trp('A', 'D', 'C')), _trp_str.getpr('A'))
         self.assertCountEqual(TrpStr(Trp('A', 'B', 'C'), Trp('A', 'D', 'C')), _trp_str['A'])
 
-    def test_del(self):
-        """Удаление триплетов по префиксу или префиксу и имени"""
+        # по индексу
+        self.assertEqual(Trp('A', 'D', 'C'), _trp_str[1])
+        self.assertEqual(Trp('D', 'E', 'F'), _trp_str[-1])  # отрицательный индекс
+
+        # по срезу
+        # TODO
+        self.assertEqual(TrpStr(Trp('A', 'D', 'C'),  Trp('A2', 'D', 'C'), Trp('D', 'E', 'F')), _trp_str[1:])
+
+    def test_rem(self):
+        """Удаление триплетов по префиксу, или префиксу и имени, или по индексу, или по срезу"""
         # по префиксу и имени
         _trp_str = TrpStr(Trp('A', 'B', 'C'), Trp('A', 'D', 'C'),  Trp('A2', 'D', 'C'), Trp('D', 'E', 'F'))
         _trp_str.rem('A', 'B')
@@ -146,7 +156,25 @@ class TestTrpStr(unittest.TestCase):
         del _trp_str['A']
         self.assertCountEqual(TrpStr(Trp('A2', 'D', 'C'), Trp('D', 'E', 'F')), _trp_str)
 
-        # нестрогое
+        # по префиксу, нестрогое
         _trp_str = TrpStr(Trp('A', 'B', 'C'), Trp('A', 'D', 'C'),  Trp('A2', 'D', 'C'), Trp('D', 'E', 'F'))
         _trp_str.rempr('A', strict=False)
         self.assertCountEqual(TrpStr(Trp('D', 'E', 'F')), _trp_str)
+
+        # по индексу
+        _trp_str = TrpStr(Trp('A', 'B', 'C'), Trp('A', 'D', 'C'),  Trp('A2', 'D', 'C'), Trp('D', 'E', 'F'))
+        del _trp_str[1]
+        self.assertEqual(TrpStr(Trp('A', 'B', 'C'), Trp('A2', 'D', 'C'), Trp('D', 'E', 'F')),
+                         _trp_str)
+
+        # по отрицательному индексу
+        # TODO
+        # _trp_str = TrpStr(Trp('A', 'B', 'C'), Trp('A', 'D', 'C'),  Trp('A2', 'D', 'C'), Trp('D', 'E', 'F'))
+        # del _trp_str[-1]
+        # self.assertEqual(TrpStr(Trp('A', 'B', 'C'), Trp('A', 'D', 'C'),  Trp('A2', 'D', 'C')),
+        #                  _trp_str)
+
+        # по срезу
+        # TODO
+        # self.assertEqual(TrpStr(Trp('A', 'D', 'C'),  Trp('A2', 'D', 'C'), Trp('D', 'E', 'F')), _trp_str[1:])
+
