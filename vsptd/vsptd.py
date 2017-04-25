@@ -432,6 +432,7 @@ class TrpStr:
         Проверяет наличие в триплетной строке триплетов по заданным префиксу или префиксу и имени
 
         :raises TypeError: если параметр не `str`/`tuple`/`list`
+
         :Пример работы:
             >>> 'A' in  TrpStr(Trp('A', 'B', 'C'))
             True
@@ -501,6 +502,24 @@ class TrpStr:
             self.__trps.update(other.__trps)
         else:
             raise TypeError('Должен быть Trp или TrpStr, не ' + type_name(other), other)
+
+    def index(self, trp) -> int:
+        """
+        Возвращает позицию триплета в триплетной строке
+
+        :param Trp trp: триплет
+        :rtype: int
+
+        :raises TypeError: Если принят не Trp
+        :raises ValueError: Если триплет не найден в триплетной строке
+        """
+        if not isinstance(trp, Trp):
+            raise TypeError('Должен быть Trp, не ' + type_name(trp), trp)
+
+        for i, trp_ in enumerate(self.__trps.values()):
+            if trp_ == trp:
+                return i
+        raise ValueError('Триплет не найден в триплетной строке', trp)
 
     def get(self, prefix: str, name):
         """

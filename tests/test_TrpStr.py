@@ -116,6 +116,13 @@ class TestTrpStr(unittest.TestCase):
         _trp_str.add(Trp('D', 'B', 'E'))
         self.assertEqual(tuple(_trp_str), tuple(TrpStr(Trp('A', 'B', 'C'), Trp('A', 'D', 'C'), Trp('D', 'B', 'E'))))
 
+    def test_index(self):
+        """Метод index"""
+        _trp_str = TrpStr(Trp('A', 'B', 'C'), Trp('A', 'D', 'C'),  Trp('A2', 'D', 'C'), Trp('D', 'E', 'F'))
+        self.assertEqual(1, _trp_str.index(Trp('A', 'D', 'C')))
+        with self.assertRaises(ValueError):
+            _trp_str.index(Trp('A', 'A', 'A'))
+
     def test_get(self):
         """Получение триплетов по префиксу, или префиксу и имени, или по индексу, или по срезу"""
         _trp_str = TrpStr(Trp('A', 'B', 'C'), Trp('A', 'D', 'C'),  Trp('A2', 'D', 'C'), Trp('D', 'E', 'F'))
