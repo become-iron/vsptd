@@ -146,3 +146,9 @@ class TestTrp(unittest.TestCase):
 
         # сравнение с трипл. строкой, содержащей один триплет
         # self.assertEqual(Trp('A', 'B', 'C'), TrpStr(Trp('A', 'B', 'C')))
+
+    def test_iter(self):
+        """Итерация"""
+        trp = Trp('A', 'B', 'C')
+        self.assertEqual(dict(prefix='A', name='B', value='C', comment=None, bid=False, special=False),
+                         dict(trp))

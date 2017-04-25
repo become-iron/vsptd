@@ -228,7 +228,7 @@ class Trp:
             if value.value is not None:
                 raise ValueError('В качестве значения можно использовать только триплет-цель', value)
         elif isinstance(value, bool):
-            # TODO: необходимый костыль, т.к. bool наследуется от int
+            # WARN: необходимый костыль, т.к. bool наследуется от int
             raise TypeError(
                 'Значение должно быть str, int, float, Trp, TrpExpr, не ' + type_name(value),
                 value
@@ -334,6 +334,14 @@ class Trp:
                 self.special == other.special
         # or (isinstance(other, TrpStr) and len(other) == 1 and self == tuple(other)[0])
         # сравнение с трипл. строкой, содержащей один триплет
+
+    def __iter__(self):
+        yield 'prefix', self.prefix
+        yield 'name', self.name
+        yield 'value', self.value
+        yield 'comment', self.comment
+        yield 'bid', self.bid
+        yield 'special', self.special
 
 
 class TrpStr:
