@@ -363,13 +363,13 @@ class TrpStr:
     settings = VSPTDSettings()
 
     def __init__(self, *trps):
-        self.__trps = OrderedDict()
-        # WARN: два прохода по списку триплетов, но позволяет не создавать механизм транзакций
-        # проверка, все ли аргументы — триплеты
-        for trp in trps:
-            if not isinstance(trp, Trp):
+        def check_type(trp):
+            # для проверки, все ли аргументы — триплеты
+            if isinstance(trp, Trp):
+                return True
+            else:
                 raise TypeError('Должен быть Trp, не ' + type_name(trp), trp)
-        self.__trps.update({hash((trp.prefix, trp.name)): trp for trp in trps})
+        self.__trps = OrderedDict({hash((trp.prefix, trp.name)): trp for trp in trps if check_type(trp)})
 
     def __str__(self):
         trps_sprtr = self.settings.trps_sprtr
