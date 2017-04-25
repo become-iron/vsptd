@@ -138,10 +138,16 @@ class TestTrpStr(unittest.TestCase):
         # по индексу
         self.assertEqual(Trp('A', 'D', 'C'), _trp_str[1])
         self.assertEqual(Trp('D', 'E', 'F'), _trp_str[-1])  # отрицательный индекс
+        with self.assertRaises(IndexError):
+            _ = _trp_str[50]
 
         # по срезу
         # TODO
         self.assertEqual(TrpStr(Trp('A', 'D', 'C'),  Trp('A2', 'D', 'C'), Trp('D', 'E', 'F')), _trp_str[1:])
+        self.assertEqual(TrpStr(Trp('A', 'B', 'C'),  Trp('A2', 'D', 'C')), _trp_str[::2])
+        self.assertEqual(TrpStr(Trp('A', 'D', 'C'),  Trp('A2', 'D', 'C')), _trp_str[1:3])
+        self.assertEqual(TrpStr(Trp('A', 'B', 'C'), Trp('A', 'D', 'C'),  Trp('A2', 'D', 'C'), Trp('D', 'E', 'F')),
+                         _trp_str[:100])
 
     def test_rem(self):
         """Удаление триплетов по префиксу, или префиксу и имени, или по индексу, или по срезу"""
@@ -173,15 +179,31 @@ class TestTrpStr(unittest.TestCase):
         del _trp_str[1]
         self.assertEqual(TrpStr(Trp('A', 'B', 'C'), Trp('A2', 'D', 'C'), Trp('D', 'E', 'F')),
                          _trp_str)
+        with self.assertRaises(IndexError):
+            del _trp_str[50]
 
         # по отрицательному индексу
-        # TODO
-        # _trp_str = TrpStr(Trp('A', 'B', 'C'), Trp('A', 'D', 'C'),  Trp('A2', 'D', 'C'), Trp('D', 'E', 'F'))
-        # del _trp_str[-1]
-        # self.assertEqual(TrpStr(Trp('A', 'B', 'C'), Trp('A', 'D', 'C'),  Trp('A2', 'D', 'C')),
-        #                  _trp_str)
+        _trp_str = TrpStr(Trp('A', 'B', 'C'), Trp('A', 'D', 'C'),  Trp('A2', 'D', 'C'), Trp('D', 'E', 'F'))
+        del _trp_str[-1]
+        self.assertEqual(TrpStr(Trp('A', 'B', 'C'), Trp('A', 'D', 'C'),  Trp('A2', 'D', 'C')),
+                         _trp_str)
+        del _trp_str[-2]
+        self.assertEqual(TrpStr(Trp('A', 'B', 'C'), Trp('A2', 'D', 'C')),
+                         _trp_str)
 
         # по срезу
-        # TODO
-        # self.assertEqual(TrpStr(Trp('A', 'D', 'C'),  Trp('A2', 'D', 'C'), Trp('D', 'E', 'F')), _trp_str[1:])
+        _trp_str = TrpStr(Trp('A', 'B', 'C'), Trp('A', 'D', 'C'),  Trp('A2', 'D', 'C'), Trp('D', 'E', 'F'))
+        del _trp_str[1:]
+        self.assertEqual(TrpStr(Trp('A', 'B', 'C')), _trp_str)
 
+        _trp_str = TrpStr(Trp('A', 'B', 'C'), Trp('A', 'D', 'C'),  Trp('A2', 'D', 'C'), Trp('D', 'E', 'F'))
+        del _trp_str[::2]
+        self.assertEqual(TrpStr(Trp('A', 'D', 'C'), Trp('D', 'E', 'F')), _trp_str)
+
+        _trp_str = TrpStr(Trp('A', 'B', 'C'), Trp('A', 'D', 'C'),  Trp('A2', 'D', 'C'), Trp('D', 'E', 'F'))
+        del _trp_str[1:3]
+        self.assertEqual(TrpStr(Trp('A', 'B', 'C'), Trp('D', 'E', 'F')), _trp_str)
+
+        _trp_str = TrpStr(Trp('A', 'B', 'C'), Trp('A', 'D', 'C'),  Trp('A2', 'D', 'C'), Trp('D', 'E', 'F'))
+        del _trp_str[:100]
+        self.assertEqual(TrpStr(), _trp_str)

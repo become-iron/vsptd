@@ -396,18 +396,17 @@ class TrpStr:
             return self.getpr(key)
         # триплет по индексу
         elif isinstance(key, int):
-            # WARN: неоптимально, исправить
-            return tuple(self)[key]
-        # elif isinstance(key, int):
-        #     # только положительные индексы
-        #     for i, trp in enumerate(self):
-        #     _ = tuple(trp for i, trp in enumerate(self) if i == key)
-        #     if _:
-        #         return _[0]
-        #     raise IndexError
+            if key >= 0:
+                sequence = enumerate(self.__trps.values())
+            else:
+                sequence = enumerate(reversed(self.__trps.values()))
+                key = abs(key) - 1
+            try:
+                return next(v for i, v in sequence if i == key)
+            except StopIteration:
+                raise IndexError('Про принятому индексу не существует триплета', key)
         # трипл. строка по срезу
         elif isinstance(key, slice):
-            # WARN: неоптимально, исправить
             return TrpStr(*tuple(self)[key])
         else:
             raise KeyError('Неверный формат ключа', key)
@@ -421,17 +420,22 @@ class TrpStr:
             self.rempr(key)
         # триплет по индексу
         elif isinstance(key, int):
-            # WARN, TODO: только для положительных индексов
-            if key < 0:  # TEMP
-                raise IndexError
-            for i, hash_ in enumerate(self.__trps):
+            if key >= 0:
+                sequence = enumerate(self.__trps)
+            else:
+                sequence = enumerate(reversed(self.__trps))
+                key = abs(key) - 1
+            for i, hash_ in sequence:
                 if i == key:
                     del self.__trps[hash_]
                     return
                 elif i > key:
                     break
-            raise IndexError
-        # TODO: добавить по срезу
+            raise IndexError('Про принятому индексу не существует триплета', key)
+        # триплеты по срезу
+        elif isinstance(key, slice):
+            for hash_ in tuple(self.__trps.keys())[key]:
+                del self.__trps[hash_]
         else:
             raise KeyError('Неверный формат ключа', key)
 
@@ -524,10 +528,10 @@ class TrpStr:
         if not isinstance(trp, Trp):
             raise TypeError('Должен быть Trp, не ' + type_name(trp), trp)
 
-        for i, trp_ in enumerate(self.__trps.values()):
-            if trp_ == trp:
-                return i
-        raise ValueError('Триплет не найден в триплетной строке', trp)
+        try:
+            return next(i for i, trp_ in enumerate(self.__trps.values()) if trp_ == trp)
+        except StopIteration:
+            raise ValueError('Триплет не найден в триплетной строке', trp)
 
     def get(self, prefix: str, name):
         """
