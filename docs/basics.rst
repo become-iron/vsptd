@@ -1,4 +1,4 @@
-Быстрый старт
+Основы работы
 =============
 
 Триплет
@@ -55,9 +55,7 @@ $A.B='C';
 $A.B=42;
 >>> print(Trp('A', 'B', 3.14))  # float
 $A.B=3.14;
->>> print(Trp('A', 'B', True))  # bool
-$A.B=True;
->>> print(Trp('A', 'B', Trp('C', 'D')))  # триплет
+>>> print(Trp('A', 'B', Trp('C', 'D')))  # триплет-цель
 $A.B=$C.D;
 >>> print(Trp('A', 'B', TrpExpr(Trp('C', 'D'), '*', 42)))  # триплетное выражение
 $A.B=$C.D*42;
@@ -106,12 +104,29 @@ False
 Сравнение
 ^^^^^^^^^
 
+.. note:: При сравнении учитываются все параметра триплета.
+
 >>> Trp('A', 'B', 'C') == Trp('A', 'B', 'C')
 True
 >>> Trp('A', 'B', 'C') == Trp('D', 'E', 'F')
 False
 
 .. warning:: Свойства **comment**, **special**, **bid** не учитываются при сравнении.
+
+Итерация и представление в виде ``dict``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+>>> for param in Trp('A', 'B', 'C'):
+...     print(param)
+('prefix', 'A')
+('name', 'B')
+('value', 'C')
+('comment', None)
+('bid', False)
+('special', False)
+
+>>> dict(Trp('A', 'B', 'C'))
+{'prefix': 'A', 'name': 'B', 'value': 'C', 'comment': None, 'bid': False, 'special': False}
 
 
 
@@ -136,7 +151,12 @@ False
     >>> trps = [Trp('A', 'B', 'C'), Trp('D', 'E', 'F')]
     >>> my_trp_str = TrpStr(*trps)
 
-.. warning:: В текущей версии в триплетной строке не гарантируется упорядоченность.
+Из генератора:
+
+    >>> trps = [Trp('A', 'B', 'C'), Trp('D', 'E', 'F')]
+    >>> my_trp_str = TrpStr(*(Trp(p, n, v) for p, n, v in trps if p == 'A'))
+
+.. note:: Триплетная строка упорядочена.
 
 Строковое представление
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -148,15 +168,30 @@ False
 
 Сравнение
 ^^^^^^^^^
+.. note:: При сравнении не учитывается порядок триплетов.
 
 >>> TrpStr(Trp('A', 'B', 'C'), Trp('D', 'E', 'F')) == TrpStr(Trp('A', 'B', 'C'))
 False
 
-Длина триплетной строки
-^^^^^^^^^^^^^^^^^^^^^^^
+Длина
+^^^^^
 
 >>> len(TrpStr(Trp('A', 'B', 'C'), Trp('D', 'E', 'F')))
 2
+
+Приведение к bool
+^^^^^^^^^^^^^^^^^
+
+>>> bool(TrpStr(Trp('A', 'B', 'C'), Trp('D', 'E', 'F')))
+True
+>>> bool(TrpStr())
+False
+
+Засчёт приведения к bool очень удобно использовать выржажения вида:
+
+>>> trp_str = TrpStr(Trp('A', 'B', 'C'), Trp('D', 'E', 'F'))
+>>> if trp_str:
+...     do_something()
 
 Вхождение триплета(-ов) в триплетную строку
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -176,13 +211,19 @@ True
 $D.E='F';
 $A.B='C';
 
-Так же ``TrpStr`` можно представить в виде ``list`` или ``tuple``:
+Поддерживается инверсная итерация через встроенную функцию ``reversed``:
 
->>> my_trp_str = TrpStr(Trp('A', 'B', 'C'), Trp('D', 'E', 'F'))
->>> list(my_trp_str)
-[Trp(prefix='D', name='E', value='F'), Trp(prefix='A', name='B', value='C')]
->>> tuple(my_trp_str)
-(Trp(prefix='D', name='E', value='F'), Trp(prefix='A', name='B', value='C'))
+    >>> trp_str = TrpStr(Trp('A', 'B', 'C'), Trp('A', 'D', 'C'),  Trp('A2', 'D', 'C'), Trp('D', 'E', 'F'))
+    >>> print(TrpStr(*reversed(trp_str)))
+    $D.E='F'; $A2.D='C'; $A.D='C'; $A.B='C';
+
+Также ``TrpStr`` можно представить в виде ``list`` или ``tuple``:
+
+    >>> my_trp_str = TrpStr(Trp('A', 'B', 'C'), Trp('D', 'E', 'F'))
+    >>> list(my_trp_str)
+    [Trp(prefix='D', name='E', value='F'), Trp(prefix='A', name='B', value='C')]
+    >>> tuple(my_trp_str)
+    (Trp(prefix='D', name='E', value='F'), Trp(prefix='A', name='B', value='C'))
 
 Сложение
 ^^^^^^^^
@@ -211,6 +252,13 @@ $A.B='C';
 .. note::
     Если при создании/обновлении триплетной строки, окажется, что существуют триплеты
     с одинаковым сочетанием префикса и имени, то будут сохранены значения последнего.
+
+Узнать порядковый номер триплета
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+>>> trp_str = TrpStr(Trp('A', 'B', 'C'), Trp('A', 'D', 'C'),  Trp('A2', 'D', 'C'), Trp('D', 'E', 'F'))
+>>> print(trp_str.index(Trp('A', 'D', 'C'))))
+1
 
 Получение триплетов
 ^^^^^^^^^^^^^^^^^^^
@@ -246,6 +294,18 @@ $A.B='C';
         >>> my_trp_str = TrpStr(Trp('A', 'B', 'C'), Trp('D', 'E', 'F'), Trp('A', 'H', 'P'))
         >>> print(my_trp_str['A'])
         $A.B='C'; $A.H='P';
+
+Получить триплет по индексу:
+
+    >>> my_trp_str = TrpStr(Trp('A', 'B', 'C'), Trp('D', 'E', 'F'), Trp('A', 'H', 'P'))
+    >>> print(my_trp_str[0])
+    $A.B='C';
+
+Получить триплеты (в виде ``TrpStr``) по срезу:
+
+    >>> my_trp_str = TrpStr(Trp('A', 'B', 'C'), Trp('D', 'E', 'F'), Trp('A', 'H', 'P'))
+    >>> print(my_trp_str[:2])
+    $A.B='C'; $D.E='F';
 
 Удаление триплетов
 ^^^^^^^^^^^^^^^^^^
@@ -286,6 +346,30 @@ $A.B='C';
         >>> print(my_trp_str)
         $D.E='F';
 
+Удалить триплет по индексу:
+
+    >>> my_trp_str = TrpStr(Trp('A', 'B', 'C'), Trp('D', 'E', 'F'), Trp('A', 'H', 'P'))
+    >>> del my_trp_str[0]
+    >>> print(my_trp_str)
+    $D.E='F'; $A.H='P';
+
+Удалить триплеты по срезу:
+
+    >>> my_trp_str = TrpStr(Trp('A', 'B', 'C'), Trp('D', 'E', 'F'), Trp('A', 'H', 'P'))
+    >>> del my_trp_str[:2]
+    >>> print(my_trp_str)
+    $A.H='P';
+
+Сортировка
+^^^^^^^^^^
+
+Сортировка осуществляется по префиксу и имени.
+
+>>> trp_str = TrpStr(Trp('D', 'E', 'F'), Trp('A', 'B', 'C'), Trp('A', 'H', 'P'))
+>>> trp_str.sort()
+>>> print(trp_str)
+$A.B='C'; $A.H='P'; $D.E='F';
+
 
 
 Триплетное выражение (фрейм-формула)
@@ -320,14 +404,14 @@ $E.F=$A.B*$C.D;
 Вычисление выражения
 ^^^^^^^^^^^^^^^^^^^^
 
-Описание API: :meth:`vsptd.vsptd.TrpExpr.compute`.
+Описание API: :meth:`vsptd.vsptd.TrpExpr.calculate`.
 
 .. warning::
     В текущей версии для вычисления выражения используется ``eval``, что потенциально опасно.
 
 >>> expr = TrpExpr(Trp('A', 'B'), '*', Trp('C', 'D'))
 >>> trp_str = TrpStr(Trp('A', 'B', 21), Trp('C', 'D', 2))
->>> expr.compute(trp_str)
+>>> expr.calculate(trp_str)
 42
 
 

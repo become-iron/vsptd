@@ -64,7 +64,8 @@
 .. toctree::
 
    install
-   start
+   quick_start
+   basics
    depth
    api
    changes
