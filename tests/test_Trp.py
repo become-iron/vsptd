@@ -71,7 +71,7 @@ class TestTrp(unittest.TestCase):
                     Trp(item, 'B')
 
         # имя
-        items = ['', 'a', 'Б', 'A'*50, '<']
+        items = ['a', 'Б', 'A'*50, '<']
         for item in items:
             with self.subTest(item=item), self.assertRaises(ValueError):
                     Trp('A', item)

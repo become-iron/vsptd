@@ -164,6 +164,8 @@ class Trp:
             >>> print(Trp('A', 'B', special=True))
             A.B
 
+        * имени или комментарию, равным пустой строке, будет присвоено значение `None`
+
     :param str prefix:  префикс триплета
     :param name: имя триплета
     :type name: str, необяз.
@@ -193,7 +195,10 @@ class Trp:
     def __init__(self, prefix: str, name=None, value=None, comment=None, bid=False, special=False):
         self.settings.validate(prefix=prefix)
         self.__prefix = prefix
-        self.settings.validate(name=name)
+        if name == '':
+            name = None
+        else:
+            self.settings.validate(name=name)
         self.__name = name
 
         # установка свойств value, comment, special, bind выполняется
@@ -244,7 +249,10 @@ class Trp:
 
     @comment.setter
     def comment(self, value):
-        self.settings.validate(comment=value)
+        if value == '':
+            value = None
+        else:
+            self.settings.validate(comment=value)
         self.__comment = value
 
     @property
