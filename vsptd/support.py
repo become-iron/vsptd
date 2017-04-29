@@ -35,21 +35,13 @@ def isfloat(value: str) -> bool:
         True
         >>> isfloat('42.42')
         True
+        >>> isfloat('42E-5')
+        True
     """
-    try:
-        if '.' in value:
+    if any(_ in value for _ in ('.', 'E', 'e')):
+        try:
             float(value)
             return True
-    except ValueError:
-        pass
+        except ValueError:
+            pass
     return False
-
-
-def group(value: str) -> str:
-    """
-    Обособляет принятую строку скобками для последующего составления RegExp
-
-    :param str value: строка для обособления
-    :rtype: str
-    """
-    return '(' + value + ')'
