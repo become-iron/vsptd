@@ -1,14 +1,17 @@
 # -*- coding: utf-8 -*-
 """Дополнительные функции и ВСПТД-объекты."""
 
-from vsptd.vsptd import Trp, TrpStr
+from collections import OrderedDict
 
-__all__ = ('satisfy_bid', 'ordered_trp_str')
+from vsptd.vsptd import Trp, TrpStr
+from vsptd.support import type_name
+
+__all__ = ('satisfy_bid', 'eq_with_order', 'VSPTDTechProcTable',)
 
 
 def satisfy_bid(bid, source):
     """
-    Возвращает триплеты из триплетной строки согласно заявке
+    Возвращает триплет/триплетную строку из триплетной строки согласно заявке
 
     Данная функция представляет собой более высокоуровневый
     инструмент, чем методы ``get``, ``getpr`` класса ``TrpStr``.
@@ -44,30 +47,82 @@ def satisfy_bid(bid, source):
         raise ValueError
 
 
-def ordered_trp_str(trp_str):
+def eq_with_order(first, second) -> bool:
     """
-    Возвращает строковое представление триплетной строки,
-    где триплеты лексиграфически упорядочены по префиксу и имени
+    Проверяет на равенство триплетные строки с учётом порядка триплетов
 
-    :param TrpStr trp_str: триплетная строка
-    :rtype: str
-
-    :Пример работы:
-        >>> trp_str = TrpStr(Trp('L', 'C', 1), Trp('E', 'T', 'G'), Trp('E', 'A', 42), Trp('Y', 'U', '8'))
-        >>> print(ordered_trp_str(trp_str))
-        $E.A=42; $E.T='G'; $L.C=1; $Y.U='8';
+    :param TrpStr first:
+    :param TrpStr second:
+    :rtype: bool
     """
-    if not isinstance(trp_str, TrpStr):
+    if not isinstance(first, TrpStr) or not isinstance(second, TrpStr):
         raise TypeError
 
-    trps_sprtr = TrpStr.settings.trps_sprtr  # разделитель триплетов
-    return trps_sprtr.join(str(trp) for trp in sorted(trp_str, key=lambda trp: (trp.prefix, trp.name)))
+    return len(first) == len(second) and all(trp == trp2 for trp, trp2 in zip(first, second))
 
 
-# def применить настройки ко всем классам
+class VSPTDTechProcTable:
+    """
+    Таблица для хранения триплексных строк, содержащих информацию по технологическим процессам.
+    Для каждой строки высчитывается первичный ключ
 
-# def expr_to_sql(expr):
-#     """
-#     Возвращает триплетное выражение в виде sql запроса
-#     """
-#     pass
+    Принимает:
+        - `*trp_strs` (TrpStr): триплексные строки
+    """
+    #: Настройки для вычисления первичного ключа, (префикс, имя, длина)
+    primary_key_setts = (
+        # (prefix, name, length),
+        ('A', 'N', 4),
+        ('P', 'N', 3),
+        ('P', 'KWO', 3),
+        ('Q', 'DI', 2),
+    )
+
+    def __init__(self, *trp_strs):
+        def check_type(trp):
+            # для проверки, все ли аргументы — триплетные строки
+            if isinstance(trp, TrpStr):
+                return True
+            else:
+                raise TypeError('Должен быть TrpStr, не ' + type_name(trp), trp)
+        self._items = OrderedDict(
+            {self.calc_primary_key(trp_str): trp_str for trp_str in trp_strs if check_type(trp_str)}
+        )
+
+    def add(self, trp_str):
+        """Добавляет триплексную строку в """
+        if not isinstance(trp_str, TrpStr):
+                raise TypeError
+
+        self._items.update({self.calc_primary_key(trp_str): trp_str})
+
+    def calc_primary_key(self, trp_str):
+        """Вычисляет первичный ключ для принятой триплексной строки"""
+        # TODO: если значение триплета - None, можно использовать просто заполненную нулями строку
+        return ''.join(
+            str(trp_str.get(prefix, name).value).zfill(len_)
+            for prefix, name, len_ in self.primary_key_setts
+        )
+
+    def __str__(self):
+        # TODO: определить формат
+        return ' || '.join('{0}: {1}'.format(key, trp_str) for key, trp_str in self._items.items())
+
+    def __repr__(self):
+        return 'VSPTDTechProcTable(' + \
+               ', '.join('{0!r}'.format(trp_str) for trp_str in self._items.values()) + \
+               ')'
+
+    def __getitem__(self, key):
+        """Возвращает по первичному ключу триплексную строку"""
+        return self._items[key]
+
+    def __delitem__(self, key):
+        """Удаляет по первичному ключу триплексную строку"""
+        del self._items[key]
+
+    def __iter__(self):
+        yield from self._items.items()
+
+    def __len__(self):
+        return len(self._items)
