@@ -1,4 +1,5 @@
-﻿[![PyPI](https://img.shields.io/pypi/v/vsptd.svg)](https://pypi.python.org/pypi?name=vsptd&:action=display) [![Documentation Status](https://readthedocs.org/projects/vsptd/badge/?version=stable)](http://vsptd.readthedocs.io/ru/latest/?badge=stable)
+﻿[![PyPI](https://img.shields.io/pypi/v/vsptd.svg)](https://pypi.python.org/pypi?name=vsptd&:action=display) [![Documentation Status](https://readthedocs.org/projects/vsptd/badge/?version=latest)](http://vsptd.readthedocs.io/ru/latest/?badge=latest)
+
 
 
 vsptd — пакет библиотек для работы с ВСПТД в Python
