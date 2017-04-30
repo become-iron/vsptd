@@ -476,6 +476,7 @@ class TrpStr:
             raise TypeError('Должен быть str, tuple, list, не ' + type_name(item), item)
 
     def __eq__(self, other):
+        # не учитывает порядок триплетов
         return isinstance(other, TrpStr) and \
                len(self) == len(other) and \
                all(trp == other.__trps.get(hash_) for hash_, trp in self.__trps.items())

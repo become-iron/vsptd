@@ -4,7 +4,7 @@ import unittest
 from vsptd.vsptd import Trp, TrpStr, TrpExpr, VSPTDSettings
 
 
-class TestTrp(unittest.TestCase):
+class TestVSPTDSettings(unittest.TestCase):
     def test_change_attr(self):
         """Изменение настроек ВСПТД"""
         setts = VSPTDSettings()
@@ -19,6 +19,7 @@ class TestTrp(unittest.TestCase):
         self.assertEqual(setts.comment_regexp, r'.*')
 
     def test_validate(self):
+        """Метод validate"""
         setts = VSPTDSettings()
         # префикс
         with self.assertRaises(ValueError):

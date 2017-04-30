@@ -126,6 +126,7 @@ def parse_trp_str(str_to_parse: str, parse_settings=VSPTDParse()):
     :raises TypeError: если ``str_to_parse`` не ``str`` и не ``TrpStr``
     :raises ValueError: неверный формат значения триплета
     """
+    # TODO: неверно работает с триплетами вида $A.B='[1, 2, 3, 'A']'
     # noinspection PyProtectedMember
     def _determine_value(value):
         """Определение типа значения триплета"""
