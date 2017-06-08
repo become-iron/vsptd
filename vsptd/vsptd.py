@@ -98,8 +98,9 @@ class VSPTDSettings:
         msg_err_regexp = 'Формат {0} некорректен'
 
         if not isinstance(trp_param, types):
+            types_names = ', '.join(map(lambda x: x.__name__, types))
             raise TypeError(
-                msg_err_type.format(param_name, types, type_name(trp_param)),
+                msg_err_type.format(param_name, types_names, type_name(trp_param)),
                 trp_param
             )
         if not isinstance(trp_param, str):
