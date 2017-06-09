@@ -8,10 +8,7 @@
 * Python 3.3+
 
 
-Для сборки документации
-^^^^^^^^^^^^^^^^^^^^^^^
-
-Python-библиотеки:
+Для сборки документации:
 
     * Sphinx == 1.5.5
     * sphinx_rtd_theme == 0.2.4
@@ -21,16 +18,22 @@ Python-библиотеки:
 Установка
 ---------
 
+.. code-block:: console
+
+   pip install vsptd
+
+Установка последней нестабильной версии (альфа, бета):
+
     .. code-block:: console
 
-       pip install vsptd
+       pip install vsptd --pre
 
+..
+    С GitHub (позволит установить самую последнюю unreleased-версию):
 
-С GitHub (позволит установить самую последнюю unreleased-версию):
+        .. code-block:: console
 
-    .. code-block:: console
-
-       pip install https://github.com/become-iron/vsptd.git
+           pip install https://github.com/become-iron/vsptd.git
 
 ..
    Если планируете внести вклад в разработку vsptd:
