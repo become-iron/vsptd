@@ -36,6 +36,7 @@ def satisfy_bid(bid, source):
     if not isinstance(source, TrpStr):
         raise TypeError
 
+    # TODO: использовать параметр по умолчанию
     if bid.bid:
         if bid.name is None:
             # по префиксу
